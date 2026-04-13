@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './routes/authRoutes.js';
 import provinceRoutes from './routes/provinceRoutes.js';
+import districtRoutes from './routes/districtRoutes.js';
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/provinces', provinceRoutes);
+app.use('/api/districts', districtRoutes);
+
 app.get('/', (req, res) => {
   res.json({ message: 'TukPatrol API is running' });
 });

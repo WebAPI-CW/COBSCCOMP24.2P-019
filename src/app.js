@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import provinceRoutes from './routes/provinceRoutes.js';
 import districtRoutes from './routes/districtRoutes.js';
 import stationRoutes from './routes/stationRoutes.js';
+import vehicleRoutes from './routes/vehicleRoutes.js';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/provinces', provinceRoutes);
 app.use('/api/districts', districtRoutes);
 app.use('/api/stations', stationRoutes);
+app.use('/api/vehicles', vehicleRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TukPatrol API is running' });

@@ -14,12 +14,12 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/provinces', provinceRoutes);
-app.use('/api/districts', districtRoutes);
-app.use('/api/stations', stationRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/locations', locationRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/provinces', provinceRoutes);
+app.use('/api/v1/districts', districtRoutes);
+app.use('/api/v1/stations', stationRoutes);
+app.use('/api/v1/vehicles', vehicleRoutes);
+app.use('/api/v1/locations', locationRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TukPatrol API is running' });

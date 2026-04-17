@@ -7,6 +7,11 @@ import {
   deactivateVehicle,
   deleteVehicle
 } from '../controllers/vehicleController.js';
+import {
+  postPing,
+  getLastLocation,
+  getLocationHistory
+} from '../controllers/locationController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -21,5 +26,9 @@ router.route('/:id')
   .delete(protect, authorize('HQ_ADMIN'), deleteVehicle);
 
 router.put('/:id/deactivate', protect, authorize('HQ_ADMIN'), deactivateVehicle);
+router.post('/:id/ping', protect, authorize('DEVICE'), postPing);
+router.get('/:id/location', protect, getLastLocation);
+router.get('/:id/history', protect, getLocationHistory);
+
 
 export default router;

@@ -21,5 +21,9 @@ router.route('/:id')
   .delete(protect, authorize('HQ_ADMIN'), deleteVehicle);
 
 router.put('/:id/deactivate', protect, authorize('HQ_ADMIN'), deactivateVehicle);
+router.post('/:id/ping', protect, authorize('DEVICE'), postPing);
+router.get('/:id/location', protect, getLastLocation);
+router.get('/:id/history', protect, getLocationHistory);
+
 
 export default router;

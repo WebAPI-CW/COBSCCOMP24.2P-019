@@ -135,31 +135,38 @@ export const getLiveLocations = async (req, res, next) => {
       .populate('district', 'name code')
       .populate('station', 'name code');
 
-    const liveData = await Promise.all(
-      vehicles.map(async (vehicle) => {
-        const lastPing = await LocationPing.findOne({
-          vehicle: vehicle._id
-        }).sort({ timestamp: -1 });
+    const vehicleIds = vehicles.map(v => v._id);
 
-        return {
-          vehicle: {
-            _id: vehicle._id,
-            registrationNumber: vehicle.registrationNumber,
-            driverName: vehicle.driverName,
-            province: vehicle.province,
-            district: vehicle.district,
-            station: vehicle.station
-          },
-          lastLocation: lastPing ? {
-            latitude: lastPing.latitude,
-            longitude: lastPing.longitude,
-            speed: lastPing.speed,
-            heading: lastPing.heading,
-            timestamp: lastPing.timestamp
-          } : null
-        };
-      })
-    );
+    // Single aggregation query to fetch the latest ping for all active vehicles
+    const latestPings = await LocationPing.aggregate([
+      { $match: { vehicle: { $in: vehicleIds } } },
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: '$vehicle', lastPing: { $first: '$$ROOT' } } }
+    ]);
+
+    const liveData = vehicles.map((vehicle) => {
+      // Find the corresponding aggregated ping for this vehicle
+      const pingDoc = latestPings.find(p => p._id.toString() === vehicle._id.toString());
+      const lastPing = pingDoc ? pingDoc.lastPing : null;
+
+      return {
+        vehicle: {
+          _id: vehicle._id,
+          registrationNumber: vehicle.registrationNumber,
+          driverName: vehicle.driverName,
+          province: vehicle.province,
+          district: vehicle.district,
+          station: vehicle.station
+        },
+        lastLocation: lastPing ? {
+          latitude: lastPing.latitude,
+          longitude: lastPing.longitude,
+          speed: lastPing.speed,
+          heading: lastPing.heading,
+          timestamp: lastPing.timestamp
+        } : null
+      };
+    });
 
     res.json({
       total: liveData.length,

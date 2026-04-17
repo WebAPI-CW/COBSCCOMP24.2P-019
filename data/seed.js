@@ -162,14 +162,13 @@ const seedDB = async () => {
     const createdStations = await PoliceStation.insertMany(stationDocs);
     console.log(`${createdStations.length} stations seeded`);
 
-    // seed admin user
-    await User.create({
-      name: 'HQ Administrator',
-      email: 'admin@slpolice.lk',
-      password: 'Admin@1234',
-      role: 'HQ_ADMIN'
-    });
-    console.log('Admin user seeded');
+    // seed users for demo purposes
+    await User.insertMany([
+      { name: 'HQ Administrator', email: 'admin@slpolice.lk', password: 'Admin@1234', role: 'HQ_ADMIN' },
+      { name: 'Provincial Commander', email: 'provincial@slpolice.lk', password: 'Provincial@1234', role: 'PROVINCIAL' },
+      { name: 'Station OIC', email: 'station@slpolice.lk', password: 'Station@1234', role: 'STATION' }
+    ]);
+    console.log('Demo users (HQ_ADMIN, PROVINCIAL, STATION) seeded');
 
     // seed 200 vehicles
     const vehicleDocs = Array.from({ length: 200 }, (_, i) => {
@@ -181,7 +180,7 @@ const seedDB = async () => {
         p => p._id.toString() === station.province.toString()
       );
       return {
-        registrationNumber: `WP-${String(i + 1).padStart(4, '0')}`,
+        registrationNumber: `${province.code}-${String(i + 1).padStart(4, '0')}`,
         deviceId: `DEV-${String(i + 1).padStart(4, '0')}`,
         driverName: driverNames[i % driverNames.length],
         driverNIC: randomNIC(i + 1),
@@ -245,7 +244,10 @@ const seedDB = async () => {
 
     console.log(`${pingDocs.length} location pings seeded`);
     console.log('--- Seed complete ---');
-    console.log('Admin login: admin@slpolice.lk / Admin@1234');
+    console.log('Demo logins:');
+    console.log('- admin@slpolice.lk / Admin@1234');
+    console.log('- provincial@slpolice.lk / Provincial@1234');
+    console.log('- station@slpolice.lk / Station@1234');
 
     process.exit(0);
   } catch (error) {

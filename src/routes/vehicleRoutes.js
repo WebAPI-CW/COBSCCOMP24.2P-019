@@ -7,6 +7,11 @@ import {
   deactivateVehicle,
   deleteVehicle
 } from '../controllers/vehicleController.js';
+import {
+  postPing,
+  getLastLocation,
+  getLocationHistory
+} from '../controllers/locationController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();

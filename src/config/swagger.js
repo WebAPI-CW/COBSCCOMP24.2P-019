@@ -4,14 +4,14 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'TukTrack API',
+      title: 'TukPatrol API',
       version: '1.0.0',
       description: 'Real-Time Three-Wheeler Tracking and Movement Logging System for Sri Lanka Law Enforcement'
     },
     servers: [
       {
         url: process.env.NODE_ENV === 'production'
-          ? 'https://your-app.onrender.com'
+          ? 'https://tukpatrol-api.onrender.com'
           : 'http://localhost:3000',
         description: process.env.NODE_ENV === 'production'
           ? 'Production Server'
@@ -101,8 +101,12 @@ const options = {
         },
         Error: {
           type: 'object',
+          required: ['code', 'message', 'description', 'moreInfo'],
           properties: {
-            message: { type: 'string' }
+            code: { type: 'string', example: '401' },
+            message: { type: 'string', example: 'Unauthorized' },
+            description: { type: 'string', example: 'Not authorized, no token' },
+            moreInfo: { type: 'string', example: '' }
           }
         }
       }

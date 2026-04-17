@@ -1,9 +1,11 @@
 import Vehicle from '../models/Vehicle.js';
+import { APIError } from '../utils/apiError.js';
+import { getPaginationData } from '../utils/paginationHelper.js';
 
 // @desc    Get all vehicles
 // @route   GET /api/vehicles
 // @access  Private
-export const getVehicles = async (req, res) => {
+export const getVehicles = async (req, res, next) => {
   try {
     const { province, district, station, isActive } = req.query;
     const filter = {};
@@ -12,38 +14,44 @@ export const getVehicles = async (req, res) => {
     if (station) filter.station = station;
     if (isActive !== undefined) filter.isActive = isActive === 'true';
 
-    const vehicles = await Vehicle.find(filter)
-      .populate('province', 'name code')
-      .populate('district', 'name code')
-      .populate('station', 'name code');
-    res.json(vehicles);
+    const paginatedData = await getPaginationData(
+      Vehicle,
+      req.query,
+      filter,
+      [
+        { path: 'province', select: 'name code' },
+        { path: 'district', select: 'name code' },
+        { path: 'station', select: 'name code' }
+      ]
+    );
+    res.json(paginatedData);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };
 
 // @desc    Get single vehicle
 // @route   GET /api/vehicles/:id
 // @access  Private
-export const getVehicle = async (req, res) => {
+export const getVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id)
       .populate('province', 'name code')
       .populate('district', 'name code')
       .populate('station', 'name code');
     if (!vehicle) {
-      return res.status(404).json({ message: 'Vehicle not found' });
+      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
     }
     res.json(vehicle);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };
 
 // @desc    Register vehicle
 // @route   POST /api/vehicles
 // @access  Private (HQ_ADMIN, PROVINCIAL)
-export const createVehicle = async (req, res) => {
+export const createVehicle = async (req, res, next) => {
   try {
     const {
       registrationNumber,
@@ -61,9 +69,7 @@ export const createVehicle = async (req, res) => {
     });
 
     if (vehicleExists) {
-      return res.status(400).json({
-        message: 'Vehicle with same registration, device ID or NIC already exists'
-      });
+      return next(new APIError(400, 'Bad Request', 'Vehicle with same registration, device ID or NIC already exists'));
     }
 
     const vehicle = await Vehicle.create({
@@ -79,14 +85,14 @@ export const createVehicle = async (req, res) => {
 
     res.status(201).json(vehicle);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };
 
 // @desc    Update vehicle
 // @route   PUT /api/vehicles/:id
 // @access  Private (HQ_ADMIN, PROVINCIAL)
-export const updateVehicle = async (req, res) => {
+export const updateVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findByIdAndUpdate(
       req.params.id,
@@ -94,18 +100,18 @@ export const updateVehicle = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!vehicle) {
-      return res.status(404).json({ message: 'Vehicle not found' });
+      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
     }
     res.json(vehicle);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };
 
 // @desc    Deactivate vehicle
 // @route   PUT /api/vehicles/:id/deactivate
 // @access  Private (HQ_ADMIN only)
-export const deactivateVehicle = async (req, res) => {
+export const deactivateVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findByIdAndUpdate(
       req.params.id,
@@ -113,25 +119,25 @@ export const deactivateVehicle = async (req, res) => {
       { new: true }
     );
     if (!vehicle) {
-      return res.status(404).json({ message: 'Vehicle not found' });
+      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
     }
     res.json({ message: 'Vehicle deactivated', vehicle });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };
 
 // @desc    Delete vehicle
 // @route   DELETE /api/vehicles/:id
 // @access  Private (HQ_ADMIN only)
-export const deleteVehicle = async (req, res) => {
+export const deleteVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findByIdAndDelete(req.params.id);
     if (!vehicle) {
-      return res.status(404).json({ message: 'Vehicle not found' });
+      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
     }
-    res.json({ message: 'Vehicle removed' });
+    res.status(204).end();
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(new APIError(500, 'Internal Server Error', error.message));
   }
 };

@@ -7,12 +7,17 @@ import districtRoutes from './routes/districtRoutes.js';
 import stationRoutes from './routes/stationRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/provinces', provinceRoutes);
@@ -24,5 +29,7 @@ app.use('/api/v1/locations', locationRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'TukPatrol API is running' });
 });
+
+app.use(errorHandler);
 
 export default app;

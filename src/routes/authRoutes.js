@@ -1,6 +1,7 @@
 import express from 'express';
 import { register, login, getMe } from '../controllers/authController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateRegister, validateLogin } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -77,7 +78,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/register', protect, authorize('HQ_ADMIN'), register);
+router.post('/register', protect, authorize('HQ_ADMIN'), validateRegister, register);
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.post('/register', protect, authorize('HQ_ADMIN'), register);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', login);
+router.post('/login', validateLogin, login);
 
 /**
  * @swagger

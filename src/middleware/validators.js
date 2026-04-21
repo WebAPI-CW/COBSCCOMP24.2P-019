@@ -47,7 +47,7 @@ export const validateStation = [
   validateRequest
 ];
 
-// Vehicle Validations
+// Vehicle Validations — POST (all required)
 export const validateVehicle = [
   body('registrationNumber').notEmpty().withMessage('Registration number is required'),
   body('deviceId').notEmpty().withMessage('Device ID is required'),
@@ -56,6 +56,18 @@ export const validateVehicle = [
   body('province').notEmpty().isMongoId().withMessage('Valid province ID is required'),
   body('district').notEmpty().isMongoId().withMessage('Valid district ID is required'),
   body('station').notEmpty().isMongoId().withMessage('Valid station ID is required'),
+  validateRequest
+];
+
+// Vehicle Validations — PUT (all fields optional for partial update)
+export const validateVehicleUpdate = [
+  body('registrationNumber').optional().notEmpty().withMessage('Registration number cannot be empty'),
+  body('deviceId').optional().notEmpty().withMessage('Device ID cannot be empty'),
+  body('driverName').optional().notEmpty().withMessage('Driver name cannot be empty'),
+  body('driverNIC').optional().notEmpty().withMessage('Driver NIC cannot be empty'),
+  body('province').optional().isMongoId().withMessage('Valid province ID required'),
+  body('district').optional().isMongoId().withMessage('Valid district ID required'),
+  body('station').optional().isMongoId().withMessage('Valid station ID required'),
   validateRequest
 ];
 

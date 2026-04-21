@@ -7,6 +7,7 @@ import {
   deleteStation
 } from '../controllers/stationController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateStation } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -79,19 +80,30 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
+ *               - province
+ *               - district
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
+ *                 example: ST001
  *               address:
  *                 type: string
+ *                 example: Fort, Colombo 01
  *               contactNumber:
  *                 type: string
+ *                 example: '0112323232'
  *               province:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109ca
  *               district:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109cb
  *     responses:
  *       201:
  *         description: Station created successfully
@@ -120,7 +132,7 @@ const router = express.Router();
  */
 router.route('/')
   .get(protect, getStations)
-  .post(protect, authorize('HQ_ADMIN'), createStation);
+  .post(protect, authorize('HQ_ADMIN'), validateStation, createStation);
 
 /**
  * @swagger
@@ -166,15 +178,22 @@ router.route('/')
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
+ *                 example: ST001
  *               address:
  *                 type: string
+ *                 example: Fort, Colombo 01
  *               contactNumber:
  *                 type: string
+ *                 example: '0112323232'
  *     responses:
  *       200:
  *         description: Station updated successfully
@@ -211,7 +230,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getStation)
-  .put(protect, authorize('HQ_ADMIN'), updateStation)
+  .put(protect, authorize('HQ_ADMIN'), validateStation, updateStation)
   .delete(protect, authorize('HQ_ADMIN'), deleteStation);
 
 export default router;

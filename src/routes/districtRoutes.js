@@ -7,6 +7,7 @@ import {
   deleteDistrict
 } from '../controllers/districtController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateDistrict } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -74,13 +75,20 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
+ *               - province
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Colombo
  *               code:
  *                 type: string
+ *                 example: COL
  *               province:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109ca
  *                 description: Province ID
  *     responses:
  *       201:
@@ -110,7 +118,7 @@ const router = express.Router();
  */
 router.route('/')
   .get(protect, getDistricts)
-  .post(protect, authorize('HQ_ADMIN'), createDistrict);
+  .post(protect, authorize('HQ_ADMIN'), validateDistrict, createDistrict);
 
 /**
  * @swagger
@@ -156,11 +164,16 @@ router.route('/')
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Colombo
  *               code:
  *                 type: string
+ *                 example: COL
  *     responses:
  *       200:
  *         description: District updated successfully
@@ -197,7 +210,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getDistrict)
-  .put(protect, authorize('HQ_ADMIN'), updateDistrict)
+  .put(protect, authorize('HQ_ADMIN'), validateDistrict, updateDistrict)
   .delete(protect, authorize('HQ_ADMIN'), deleteDistrict);
 
 export default router;

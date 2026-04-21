@@ -13,6 +13,7 @@ import {
   getLocationHistory
 } from '../controllers/locationController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateVehicle, validateVehicleUpdate, validatePing } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -91,23 +92,39 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - registrationNumber
+ *               - deviceId
+ *               - driverName
+ *               - driverNIC
+ *               - province
+ *               - district
+ *               - station
  *             properties:
  *               registrationNumber:
  *                 type: string
+ *                 example: WP-0001
  *               deviceId:
  *                 type: string
+ *                 example: DEV-0001
  *               driverName:
  *                 type: string
+ *                 example: Kamal Perera
  *               driverNIC:
  *                 type: string
+ *                 example: 198500100001V
  *               driverContact:
  *                 type: string
+ *                 example: '0771234567'
  *               province:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109ca
  *               district:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109cb
  *               station:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109cc
  *     responses:
  *       201:
  *         description: Vehicle created successfully
@@ -130,7 +147,7 @@ const router = express.Router();
  */
 router.route('/')
   .get(protect, getVehicles)
-  .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), createVehicle);
+  .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateVehicle, createVehicle);
 
 /**
  * @swagger
@@ -212,7 +229,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getVehicle)
-  .put(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), updateVehicle)
+  .put(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateVehicleUpdate, updateVehicle)
   .delete(protect, authorize('HQ_ADMIN'), deleteVehicle);
 
 /**
@@ -304,7 +321,7 @@ router.get('/:id/history', protect, getLocationHistory);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/:id/ping', protect, authorize('DEVICE'), postPing);
+router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
 
 /**
  * @swagger

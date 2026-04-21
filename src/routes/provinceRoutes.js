@@ -7,6 +7,7 @@ import {
   deleteProvince
 } from '../controllers/provinceController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateProvince } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -69,11 +70,16 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Western
  *               code:
  *                 type: string
+ *                 example: WP
  *     responses:
  *       201:
  *         description: Province created successfully
@@ -96,7 +102,7 @@ const router = express.Router();
  */
 router.route('/')
   .get(protect, getProvinces)
-  .post(protect, authorize('HQ_ADMIN'), createProvince);
+  .post(protect, authorize('HQ_ADMIN'), validateProvince, createProvince);
 
 /**
  * @swagger
@@ -142,11 +148,16 @@ router.route('/')
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Western
  *               code:
  *                 type: string
+ *                 example: WP
  *     responses:
  *       200:
  *         description: Province updated successfully
@@ -183,7 +194,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getProvince)
-  .put(protect, authorize('HQ_ADMIN'), updateProvince)
+  .put(protect, authorize('HQ_ADMIN'), validateProvince, updateProvince)
   .delete(protect, authorize('HQ_ADMIN'), deleteProvince);
 
 export default router;

@@ -26,21 +26,34 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - role
  *             properties:
  *               name:
  *                 type: string
+ *                 example: John Silva
  *               email:
  *                 type: string
+ *                 example: john@slpolice.lk
  *               password:
  *                 type: string
+ *                 example: Secret@123
  *               role:
  *                 type: string
+ *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
+ *                 example: STATION
  *               province:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109ca
  *               district:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109cb
  *               station:
  *                 type: string
+ *                 example: 60d0fe4f5311236168a109cc
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -92,11 +105,16 @@ router.post('/register', protect, authorize('HQ_ADMIN'), validateRegister, regis
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
+ *                 example: admin@slpolice.lk
  *               password:
  *                 type: string
+ *                 example: Admin@1234
  *     responses:
  *       200:
  *         description: Successfully logged in

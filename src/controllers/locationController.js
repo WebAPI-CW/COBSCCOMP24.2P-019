@@ -124,11 +124,12 @@ export const getLocationHistory = async (req, res, next) => {
 // @access  Private
 export const getLiveLocations = async (req, res, next) => {
   try {
-    const { province, district } = req.query;
+    const { province, district, station } = req.query;
 
     const vehicleFilter = { isActive: true };
     if (province) vehicleFilter.province = province;
     if (district) vehicleFilter.district = district;
+    if (station) vehicleFilter.station = station;
 
     const vehicles = await Vehicle.find(vehicleFilter)
       .populate('province', 'name code')

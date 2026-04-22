@@ -33,6 +33,10 @@ const router = express.Router();
  *         name: district
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: station
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Global live positions

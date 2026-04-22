@@ -58,7 +58,7 @@ Run `npm run seed` to populate the database with simulation data:
 - 9 provinces, 25 districts, 25 police stations
 - 200 registered tuk-tuks with province-accurate registration numbers
 - 14,000 location pings spanning 1 week of movement history
-- 3 demo users (HQ_ADMIN, PROVINCIAL, STATION roles)
+- 4 demo users (HQ_ADMIN, PROVINCIAL, STATION, DEVICE roles)
 
 ## Branching Strategy
 

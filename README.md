@@ -157,3 +157,4 @@ Full documentation available at `/api-docs` (Swagger UI).
   on the ping endpoint.
 - **Docker** — Not used for deployment but a Dockerfile is 
   included for local containerized setup.
+  

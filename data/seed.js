@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import Province from '../src/models/Province.js';
 import District from '../src/models/District.js';
 import PoliceStation from '../src/models/PoliceStation.js';
@@ -162,13 +163,35 @@ const seedDB = async () => {
     const createdStations = await PoliceStation.insertMany(stationDocs);
     console.log(`${createdStations.length} stations seeded`);
 
-    // seed users for demo purposes
+    // seed users — manually hash passwords because insertMany bypasses pre-save hooks
+    const salt = await bcrypt.genSalt(10);
     await User.insertMany([
-      { name: 'HQ Administrator', email: 'admin@slpolice.lk', password: 'Admin@1234', role: 'HQ_ADMIN' },
-      { name: 'Provincial Commander', email: 'provincial@slpolice.lk', password: 'Provincial@1234', role: 'PROVINCIAL' },
-      { name: 'Station OIC', email: 'station@slpolice.lk', password: 'Station@1234', role: 'STATION' }
+      {
+        name: 'HQ Administrator',
+        email: 'admin@slpolice.lk',
+        password: await bcrypt.hash('Admin@1234', salt),
+        role: 'HQ_ADMIN'
+      },
+      {
+        name: 'Provincial Commander',
+        email: 'provincial@slpolice.lk',
+        password: await bcrypt.hash('Provincial@1234', salt),
+        role: 'PROVINCIAL'
+      },
+      {
+        name: 'Station OIC',
+        email: 'station@slpolice.lk',
+        password: await bcrypt.hash('Station@1234', salt),
+        role: 'STATION'
+      },
+      {
+        name: 'Device Unit 001',
+        email: 'device001@slpolice.lk',
+        password: await bcrypt.hash('Device@1234', salt),
+        role: 'DEVICE'
+      }
     ]);
-    console.log('Demo users (HQ_ADMIN, PROVINCIAL, STATION) seeded');
+    console.log('Demo users (HQ_ADMIN, PROVINCIAL, STATION, DEVICE) seeded');
 
     // seed 200 vehicles
     const vehicleDocs = Array.from({ length: 200 }, (_, i) => {
@@ -245,9 +268,10 @@ const seedDB = async () => {
     console.log(`${pingDocs.length} location pings seeded`);
     console.log('--- Seed complete ---');
     console.log('Demo logins:');
-    console.log('- admin@slpolice.lk / Admin@1234');
-    console.log('- provincial@slpolice.lk / Provincial@1234');
-    console.log('- station@slpolice.lk / Station@1234');
+    console.log('- admin@slpolice.lk / Admin@1234 (HQ_ADMIN)');
+    console.log('- provincial@slpolice.lk / Provincial@1234 (PROVINCIAL)');
+    console.log('- station@slpolice.lk / Station@1234 (STATION)');
+    console.log('- device001@slpolice.lk / Device@1234 (DEVICE)');
 
     process.exit(0);
   } catch (error) {

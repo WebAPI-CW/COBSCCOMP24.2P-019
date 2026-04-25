@@ -1,0 +1,26 @@
+[
+  {
+    "name": "HQ Administrator",
+    "email": "admin@slpolice.lk",
+    "password": "Admin@1234",
+    "role": "HQ_ADMIN"
+  },
+  {
+    "name": "Provincial Commander",
+    "email": "provincial@slpolice.lk",
+    "password": "Provincial@1234",
+    "role": "PROVINCIAL"
+  },
+  {
+    "name": "Station OIC",
+    "email": "station@slpolice.lk",
+    "password": "Station@1234",
+    "role": "STATION"
+  },
+  {
+    "name": "Device Unit 001",
+    "email": "device001@slpolice.lk",
+    "password": "Device@1234",
+    "role": "DEVICE"
+  }
+]

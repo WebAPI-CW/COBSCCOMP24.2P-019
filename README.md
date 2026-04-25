@@ -93,6 +93,7 @@ DEV-0001 over one week as a representative sample.
 | HQ_ADMIN | admin@slpolice.lk | Admin@1234 |
 | PROVINCIAL | provincial@slpolice.lk | Provincial@1234 |
 | STATION | station@slpolice.lk | Station@1234 |
+| DEVICE | device001@slpolice.lk | Device@1234 |
 
 ---
 

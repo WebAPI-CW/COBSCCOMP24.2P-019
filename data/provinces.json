@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Western",
+    "code": "WP"
+  },
+  {
+    "name": "Central",
+    "code": "CP"
+  },
+  {
+    "name": "Southern",
+    "code": "SP"
+  },
+  {
+    "name": "Northern",
+    "code": "NP"
+  },
+  {
+    "name": "Eastern",
+    "code": "EP"
+  },
+  {
+    "name": "North Western",
+    "code": "NWP"
+  },
+  {
+    "name": "North Central",
+    "code": "NCP"
+  },
+  {
+    "name": "Uva",
+    "code": "UP"
+  },
+  {
+    "name": "Sabaragamuwa",
+    "code": "SGP"
+  }
+]

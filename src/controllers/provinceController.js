@@ -1,77 +1,63 @@
-import Province from '../models/Province.js';
-import { APIError } from '../utils/apiError.js';
-import { getPaginationData } from '../utils/paginationHelper.js';
+import * as ProvinceService from '../services/provinceService.js';
 
 // @desc    Get all provinces
-// @route   GET /api/provinces
+// @route   GET /api/v1/provinces
 // @access  Private
 export const getProvinces = async (req, res, next) => {
   try {
-    const paginatedData = await getPaginationData(Province, req.query);
-    res.json(paginatedData);
+    const data = await ProvinceService.getAllProvinces(req.query);
+    res.json(data);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Get single province
-// @route   GET /api/provinces/:id
+// @route   GET /api/v1/provinces/:id
 // @access  Private
 export const getProvince = async (req, res, next) => {
   try {
-    const province = await Province.findById(req.params.id);
-    if (!province) {
-      return next(new APIError(404, 'Not Found', 'Province not found'));
-    }
+    const province = await ProvinceService.getProvinceById(req.params.id);
     res.json(province);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Create province
-// @route   POST /api/provinces
+// @route   POST /api/v1/provinces
 // @access  Private (HQ_ADMIN only)
 export const createProvince = async (req, res, next) => {
   try {
     const { name, code } = req.body;
-    const province = await Province.create({ name, code });
+    const province = await ProvinceService.createProvince({ name, code });
     res.status(201).json(province);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Update province
-// @route   PUT /api/provinces/:id
+// @route   PUT /api/v1/provinces/:id
 // @access  Private (HQ_ADMIN only)
 export const updateProvince = async (req, res, next) => {
   try {
-    const province = await Province.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!province) {
-      return next(new APIError(404, 'Not Found', 'Province not found'));
-    }
+    const { name, code } = req.body;
+    const province = await ProvinceService.updateProvince(req.params.id, { name, code });
     res.json(province);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Delete province
-// @route   DELETE /api/provinces/:id
+// @route   DELETE /api/v1/provinces/:id
 // @access  Private (HQ_ADMIN only)
 export const deleteProvince = async (req, res, next) => {
   try {
-    const province = await Province.findByIdAndDelete(req.params.id);
-    if (!province) {
-      return next(new APIError(404, 'Not Found', 'Province not found'));
-    }
+    await ProvinceService.deleteProvince(req.params.id);
     res.status(204).end();
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };

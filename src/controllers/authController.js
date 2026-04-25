@@ -1,28 +1,13 @@
-import User from '../models/User.js';
+import * as AuthService from '../services/authService.js';
 import generateToken from '../utils/generateToken.js';
-import { APIError } from '../utils/apiError.js';
 
 // @desc    Register user
-// @route   POST /api/auth/register
+// @route   POST /api/v1/auth/register
 // @access  Private (HQ_ADMIN only)
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role, province, district, station } = req.body;
-
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return next(new APIError(400, 'Bad Request', 'User already exists'));
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role,
-      province,
-      district,
-      station
-    });
+    const user = await AuthService.registerUser({ name, email, password, role, province, district, station });
 
     res.status(201).json({
       _id: user._id,
@@ -32,25 +17,17 @@ export const register = async (req, res, next) => {
       token: generateToken(user._id, user.role)
     });
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Login user
-// @route   POST /api/auth/login
+// @route   POST /api/v1/auth/login
 // @access  Public
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user || !(await user.matchPassword(password))) {
-      return next(new APIError(401, 'Unauthorized', 'Invalid email or password'));
-    }
-
-    if (!user.isActive) {
-      return next(new APIError(401, 'Unauthorized', 'Account is deactivated'));
-    }
+    const user = await AuthService.loginUser(email, password);
 
     res.status(200).json({
       _id: user._id,
@@ -60,17 +37,18 @@ export const login = async (req, res, next) => {
       token: generateToken(user._id, user.role)
     });
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
+// @desc    Get current authenticated user
+// @route   GET /api/v1/auth/me
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    res.json(req.user);
+    const user = await AuthService.getUserById(req.user._id);
+    res.json(user);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };

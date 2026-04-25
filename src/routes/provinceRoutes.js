@@ -7,7 +7,7 @@ import {
   deleteProvince
 } from '../controllers/provinceController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateProvince } from '../middleware/validators.js';
+import { validateProvince, validateProvinceUpdate } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -194,7 +194,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getProvince)
-  .put(protect, authorize('HQ_ADMIN'), validateProvince, updateProvince)
+  .put(protect, authorize('HQ_ADMIN'), validateProvinceUpdate, updateProvince)
   .delete(protect, authorize('HQ_ADMIN'), deleteProvince);
 
 export default router;

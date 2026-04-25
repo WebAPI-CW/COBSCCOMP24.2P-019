@@ -1,86 +1,65 @@
-import District from '../models/District.js';
-import { APIError } from '../utils/apiError.js';
-import { getPaginationData } from '../utils/paginationHelper.js';
+import * as DistrictService from '../services/districtService.js';
 
 // @desc    Get all districts
-// @route   GET /api/districts
+// @route   GET /api/v1/districts
 // @access  Private
 export const getDistricts = async (req, res, next) => {
   try {
     const { province } = req.query;
     const filter = province ? { province } : {};
-    
-    const paginatedData = await getPaginationData(
-      District, 
-      req.query, 
-      filter, 
-      { path: 'province', select: 'name code' }
-    );
-    res.json(paginatedData);
+    const data = await DistrictService.getAllDistricts(filter, req.query);
+    res.json(data);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Get single district
-// @route   GET /api/districts/:id
+// @route   GET /api/v1/districts/:id
 // @access  Private
 export const getDistrict = async (req, res, next) => {
   try {
-    const district = await District.findById(req.params.id)
-      .populate('province', 'name code');
-    if (!district) {
-      return next(new APIError(404, 'Not Found', 'District not found'));
-    }
+    const district = await DistrictService.getDistrictById(req.params.id);
     res.json(district);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Create district
-// @route   POST /api/districts
+// @route   POST /api/v1/districts
 // @access  Private (HQ_ADMIN only)
 export const createDistrict = async (req, res, next) => {
   try {
     const { name, code, province } = req.body;
-    const district = await District.create({ name, code, province });
+    const district = await DistrictService.createDistrict({ name, code, province });
     res.status(201).json(district);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Update district
-// @route   PUT /api/districts/:id
+// @route   PUT /api/v1/districts/:id
 // @access  Private (HQ_ADMIN only)
 export const updateDistrict = async (req, res, next) => {
   try {
-    const district = await District.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!district) {
-      return next(new APIError(404, 'Not Found', 'District not found'));
-    }
+    const { name, code, province } = req.body;
+    const district = await DistrictService.updateDistrict(req.params.id, { name, code, province });
     res.json(district);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Delete district
-// @route   DELETE /api/districts/:id
+// @route   DELETE /api/v1/districts/:id
 // @access  Private (HQ_ADMIN only)
 export const deleteDistrict = async (req, res, next) => {
   try {
-    const district = await District.findByIdAndDelete(req.params.id);
-    if (!district) {
-      return next(new APIError(404, 'Not Found', 'District not found'));
-    }
+    await DistrictService.deleteDistrict(req.params.id);
     res.status(204).end();
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };

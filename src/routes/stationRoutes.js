@@ -7,7 +7,7 @@ import {
   deleteStation
 } from '../controllers/stationController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateStation } from '../middleware/validators.js';
+import { validateStation, validateStationUpdate } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -230,7 +230,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getStation)
-  .put(protect, authorize('HQ_ADMIN'), validateStation, updateStation)
+  .put(protect, authorize('HQ_ADMIN'), validateStationUpdate, updateStation)
   .delete(protect, authorize('HQ_ADMIN'), deleteStation);
 
 export default router;

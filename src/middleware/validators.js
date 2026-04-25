@@ -4,13 +4,13 @@ import { APIError } from '../utils/apiError.js';
 export const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Return the first error's message
     return next(new APIError(400, 'Bad Request', errors.array()[0].msg));
   }
   next();
 };
 
-// Auth Validations
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
 export const validateRegister = [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
@@ -25,13 +25,25 @@ export const validateLogin = [
   validateRequest
 ];
 
-// Boundary Validations
+// ─── Province ─────────────────────────────────────────────────────────────────
+
+// POST — all required
 export const validateProvince = [
   body('name').notEmpty().withMessage('Province name is required'),
   body('code').notEmpty().withMessage('Province code is required'),
   validateRequest
 ];
 
+// PUT — all fields optional for partial updates
+export const validateProvinceUpdate = [
+  body('name').optional().notEmpty().withMessage('Province name cannot be empty'),
+  body('code').optional().notEmpty().withMessage('Province code cannot be empty'),
+  validateRequest
+];
+
+// ─── District ─────────────────────────────────────────────────────────────────
+
+// POST — all required
 export const validateDistrict = [
   body('name').notEmpty().withMessage('District name is required'),
   body('code').notEmpty().withMessage('District code is required'),
@@ -39,6 +51,17 @@ export const validateDistrict = [
   validateRequest
 ];
 
+// PUT — all fields optional for partial updates
+export const validateDistrictUpdate = [
+  body('name').optional().notEmpty().withMessage('District name cannot be empty'),
+  body('code').optional().notEmpty().withMessage('District code cannot be empty'),
+  body('province').optional().isMongoId().withMessage('Valid province ID is required'),
+  validateRequest
+];
+
+// ─── Station ──────────────────────────────────────────────────────────────────
+
+// POST — name, code, district, province required
 export const validateStation = [
   body('name').notEmpty().withMessage('Station name is required'),
   body('code').notEmpty().withMessage('Station code is required'),
@@ -47,7 +70,18 @@ export const validateStation = [
   validateRequest
 ];
 
-// Vehicle Validations — POST (all required)
+// PUT — all fields optional for partial updates
+export const validateStationUpdate = [
+  body('name').optional().notEmpty().withMessage('Station name cannot be empty'),
+  body('code').optional().notEmpty().withMessage('Station code cannot be empty'),
+  body('district').optional().isMongoId().withMessage('Valid district ID is required'),
+  body('province').optional().isMongoId().withMessage('Valid province ID is required'),
+  validateRequest
+];
+
+// ─── Vehicle ──────────────────────────────────────────────────────────────────
+
+// POST — all required
 export const validateVehicle = [
   body('registrationNumber').notEmpty().withMessage('Registration number is required'),
   body('deviceId').notEmpty().withMessage('Device ID is required'),
@@ -59,7 +93,7 @@ export const validateVehicle = [
   validateRequest
 ];
 
-// Vehicle Validations — PUT (all fields optional for partial update)
+// PUT — all fields optional for partial updates
 export const validateVehicleUpdate = [
   body('registrationNumber').optional().notEmpty().withMessage('Registration number cannot be empty'),
   body('deviceId').optional().notEmpty().withMessage('Device ID cannot be empty'),
@@ -71,11 +105,12 @@ export const validateVehicleUpdate = [
   validateRequest
 ];
 
-// Location Ping Validation
+// ─── Location Ping ────────────────────────────────────────────────────────────
+
 export const validatePing = [
-  body('latitude').isFloat({ min: 5.9, max: 9.9 }).withMessage('Valid latitude for Sri Lanka is required'),
-  body('longitude').isFloat({ min: 79.7, max: 81.9 }).withMessage('Valid longitude for Sri Lanka is required'),
-  body('speed').optional().isFloat().withMessage('Speed must be a number'),
-  body('heading').optional().isFloat().withMessage('Heading must be a number'),
+  body('latitude').isFloat({ min: 5.9, max: 9.9 }).withMessage('Valid latitude for Sri Lanka is required (5.9 – 9.9)'),
+  body('longitude').isFloat({ min: 79.7, max: 81.9 }).withMessage('Valid longitude for Sri Lanka is required (79.7 – 81.9)'),
+  body('speed').optional().isFloat({ min: 0 }).withMessage('Speed must be a non-negative number'),
+  body('heading').optional().isFloat({ min: 0, max: 360 }).withMessage('Heading must be between 0 and 360'),
   validateRequest
 ];

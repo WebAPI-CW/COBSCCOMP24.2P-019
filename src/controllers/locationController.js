@@ -1,179 +1,73 @@
-import LocationPing from '../models/LocationPing.js';
-import Vehicle from '../models/Vehicle.js';
-import { APIError } from '../utils/apiError.js';
-import { getPaginationData } from '../utils/paginationHelper.js';
+import * as LocationService from '../services/locationService.js';
 
 // @desc    Post location ping
-// @route   POST /api/vehicles/:id/ping
+// @route   POST /api/v1/vehicles/:id/ping
 // @access  Private (DEVICE only)
 export const postPing = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
-    if (!vehicle) {
-      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
-    }
-
-    if (!vehicle.isActive) {
-      return next(new APIError(400, 'Bad Request', 'Vehicle is not active'));
-    }
-
     const { latitude, longitude, speed, heading } = req.body;
-
-    const ping = await LocationPing.create({
-      vehicle: req.params.id,
-      latitude,
-      longitude,
-      speed: speed || 0,
-      heading: heading || 0,
-      timestamp: new Date()
-    });
-
+    const ping = await LocationService.recordPing(req.params.id, { latitude, longitude, speed, heading });
     res.status(201).json(ping);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Get last known location of a vehicle
-// @route   GET /api/vehicles/:id/location
+// @route   GET /api/v1/vehicles/:id/location
 // @access  Private
 export const getLastLocation = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id)
-      .populate('province', 'name code')
-      .populate('district', 'name code')
-      .populate('station', 'name code');
-
-    if (!vehicle) {
-      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
-    }
-
-    const lastPing = await LocationPing.findOne({ vehicle: req.params.id })
-      .sort({ timestamp: -1 });
-
-    if (!lastPing) {
-      return next(new APIError(404, 'Not Found', 'No location data found'));
-    }
+    const { vehicle, lastPing } = await LocationService.getLastLocation(req.params.id);
 
     res.json({
       vehicle: {
-        _id: vehicle._id,
+        _id:                vehicle._id,
         registrationNumber: vehicle.registrationNumber,
-        driverName: vehicle.driverName,
-        province: vehicle.province,
-        district: vehicle.district,
-        station: vehicle.station
+        driverName:         vehicle.driverName,
+        province:           vehicle.province,
+        district:           vehicle.district,
+        station:            vehicle.station
       },
       lastLocation: {
-        latitude: lastPing.latitude,
+        latitude:  lastPing.latitude,
         longitude: lastPing.longitude,
-        speed: lastPing.speed,
-        heading: lastPing.heading,
+        speed:     lastPing.speed,
+        heading:   lastPing.heading,
         timestamp: lastPing.timestamp
       }
     });
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
 // @desc    Get location history of a vehicle
-// @route   GET /api/vehicles/:id/history
+// @route   GET /api/v1/vehicles/:id/history
 // @access  Private
 export const getLocationHistory = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
-    if (!vehicle) {
-      return next(new APIError(404, 'Not Found', 'Vehicle not found'));
-    }
-
-    const { from, to } = req.query;
-
-    const filter = { vehicle: req.params.id };
-
-    if (from || to) {
-      filter.timestamp = {};
-      if (from) filter.timestamp.$gte = new Date(from);
-      if (to) filter.timestamp.$lte = new Date(to);
-    }
-
-    const paginatedData = await getPaginationData(
-      LocationPing,
-      req.query,
-      filter,
-      null, // populateOptions
-      100,  // defaultLimit
-      { timestamp: -1 } // sortOptions
-    );
-
-    res.json({
-      vehicle: {
-        _id: vehicle._id,
-        registrationNumber: vehicle.registrationNumber,
-        driverName: vehicle.driverName
-      },
-      ...paginatedData
-    });
+    const result = await LocationService.getLocationHistory(req.params.id, req.query);
+    res.json(result);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };
 
-// @desc    Get all active vehicle locations
-// @route   GET /api/locations/live
+// @desc    Get all active vehicle locations (live view)
+// @route   GET /api/v1/locations/live
 // @access  Private
 export const getLiveLocations = async (req, res, next) => {
   try {
     const { province, district, station } = req.query;
-
     const vehicleFilter = { isActive: true };
     if (province) vehicleFilter.province = province;
     if (district) vehicleFilter.district = district;
-    if (station) vehicleFilter.station = station;
+    if (station)  vehicleFilter.station  = station;
 
-    const vehicles = await Vehicle.find(vehicleFilter)
-      .populate('province', 'name code')
-      .populate('district', 'name code')
-      .populate('station', 'name code');
-
-    const vehicleIds = vehicles.map(v => v._id);
-
-    // Single aggregation query to fetch the latest ping for all active vehicles
-    const latestPings = await LocationPing.aggregate([
-      { $match: { vehicle: { $in: vehicleIds } } },
-      { $sort: { timestamp: -1 } },
-      { $group: { _id: '$vehicle', lastPing: { $first: '$$ROOT' } } }
-    ]);
-
-    const liveData = vehicles.map((vehicle) => {
-      // Find the corresponding aggregated ping for this vehicle
-      const pingDoc = latestPings.find(p => p._id.toString() === vehicle._id.toString());
-      const lastPing = pingDoc ? pingDoc.lastPing : null;
-
-      return {
-        vehicle: {
-          _id: vehicle._id,
-          registrationNumber: vehicle.registrationNumber,
-          driverName: vehicle.driverName,
-          province: vehicle.province,
-          district: vehicle.district,
-          station: vehicle.station
-        },
-        lastLocation: lastPing ? {
-          latitude: lastPing.latitude,
-          longitude: lastPing.longitude,
-          speed: lastPing.speed,
-          heading: lastPing.heading,
-          timestamp: lastPing.timestamp
-        } : null
-      };
-    });
-
-    res.json({
-      total: liveData.length,
-      data: liveData
-    });
+    const result = await LocationService.getLiveLocations(vehicleFilter);
+    res.json(result);
   } catch (error) {
-    next(new APIError(500, 'Internal Server Error', error.message));
+    next(error);
   }
 };

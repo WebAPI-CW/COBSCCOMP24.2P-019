@@ -7,7 +7,7 @@ import {
   deleteDistrict
 } from '../controllers/districtController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateDistrict } from '../middleware/validators.js';
+import { validateDistrict, validateDistrictUpdate } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -210,7 +210,7 @@ router.route('/')
  */
 router.route('/:id')
   .get(protect, getDistrict)
-  .put(protect, authorize('HQ_ADMIN'), validateDistrict, updateDistrict)
+  .put(protect, authorize('HQ_ADMIN'), validateDistrictUpdate, updateDistrict)
   .delete(protect, authorize('HQ_ADMIN'), deleteDistrict);
 
 export default router;

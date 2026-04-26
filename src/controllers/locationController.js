@@ -1,73 +1,88 @@
 import * as LocationService from '../services/locationService.js';
 
-// @desc    Post location ping
-// @route   POST /api/v1/vehicles/:id/ping
-// @access  Private (DEVICE only)
 export const postPing = async (req, res, next) => {
   try {
     const { latitude, longitude, speed, heading } = req.body;
     const ping = await LocationService.recordPing(req.params.id, { latitude, longitude, speed, heading });
     res.status(201).json(ping);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// @desc    Get last known location of a vehicle
-// @route   GET /api/v1/vehicles/:id/location
-// @access  Private
 export const getLastLocation = async (req, res, next) => {
   try {
-    const { vehicle, lastPing } = await LocationService.getLastLocation(req.params.id);
-
+    const { tukTuk, lastPing } = await LocationService.getLastLocation(req.params.id);
     res.json({
-      vehicle: {
-        _id:                vehicle._id,
-        registrationNumber: vehicle.registrationNumber,
-        driverName:         vehicle.driverName,
-        province:           vehicle.province,
-        district:           vehicle.district,
-        station:            vehicle.station
-      },
-      lastLocation: {
-        latitude:  lastPing.latitude,
-        longitude: lastPing.longitude,
-        speed:     lastPing.speed,
-        heading:   lastPing.heading,
-        timestamp: lastPing.timestamp
-      }
+      tukTuk: { _id: tukTuk._id, registrationNumber: tukTuk.registrationNumber,
+        driverName: tukTuk.driverName, province: tukTuk.province, district: tukTuk.district, station: tukTuk.station },
+      lastLocation: { latitude: lastPing.latitude, longitude: lastPing.longitude,
+        speed: lastPing.speed, heading: lastPing.heading, timestamp: lastPing.timestamp }
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// @desc    Get location history of a vehicle
-// @route   GET /api/v1/vehicles/:id/history
-// @access  Private
 export const getLocationHistory = async (req, res, next) => {
   try {
     const result = await LocationService.getLocationHistory(req.params.id, req.query);
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// @desc    Get all active vehicle locations (live view)
-// @route   GET /api/v1/locations/live
-// @access  Private
+export const getTukTukSummary = async (req, res, next) => {
+  try {
+    const result = await LocationService.getTukTukSummary(req.params.id, req.query);
+    res.json(result);
+  } catch (error) { next(error); }
+};
+
 export const getLiveLocations = async (req, res, next) => {
   try {
     const { province, district, station } = req.query;
-    const vehicleFilter = { isActive: true };
-    if (province) vehicleFilter.province = province;
-    if (district) vehicleFilter.district = district;
-    if (station)  vehicleFilter.station  = station;
-
-    const result = await LocationService.getLiveLocations(vehicleFilter, req.query);
+    const tukTukFilter = { isActive: true };
+    if (province) tukTukFilter.province = province;
+    if (district) tukTukFilter.district = district;
+    if (station)  tukTukFilter.station  = station;
+    const result = await LocationService.getLiveLocations(tukTukFilter, req.query);
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
+};
+
+export const getInactiveTukTuks = async (req, res, next) => {
+  try {
+    const { province, district, hours } = req.query;
+    const tukTukFilter = { isActive: true };
+    if (province) tukTukFilter.province = province;
+    if (district) tukTukFilter.district = district;
+    const result = await LocationService.getInactiveTukTuks(tukTukFilter, parseInt(hours, 10) || 6);
+    res.json(result);
+  } catch (error) { next(error); }
+};
+
+export const getAllLocationHistory = async (req, res, next) => {
+  try {
+    const { province, district, station } = req.query;
+    const tukTukFilter = {};
+    if (province) tukTukFilter.province = province;
+    if (district) tukTukFilter.district = district;
+    if (station)  tukTukFilter.station  = station;
+    const result = await LocationService.getAllLocationHistory(tukTukFilter, req.query);
+    res.json(result);
+  } catch (error) { next(error); }
+};
+
+export const getSpeedAnomalies = async (req, res, next) => {
+  try {
+    const { province, district } = req.query;
+    const tukTukFilter = {};
+    if (province) tukTukFilter.province = province;
+    if (district) tukTukFilter.district = district;
+    const result = await LocationService.getSpeedAnomalies(tukTukFilter, req.query);
+    res.json(result);
+  } catch (error) { next(error); }
+};
+
+export const getLocationSummary = async (req, res, next) => {
+  try {
+    const result = await LocationService.getLocationSummary();
+    res.json(result);
+  } catch (error) { next(error); }
 };

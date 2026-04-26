@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 const locationPingSchema = new mongoose.Schema({
-  vehicle: {
+  tukTuk: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vehicle',
+    ref: 'TukTuk',
     required: true
   },
   latitude: {
@@ -28,7 +28,7 @@ const locationPingSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// index for faster queries on vehicle and timestamp
-locationPingSchema.index({ vehicle: 1, timestamp: -1 });
+// index for faster queries on tukTuk and timestamp
+locationPingSchema.index({ tukTuk: 1, timestamp: -1 });
 
 export default mongoose.model('LocationPing', locationPingSchema);

@@ -1,35 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { registerUser, loginUser, getUserById } from '../../src/services/authService.js';
+import { loginUser, getUserById } from '../../src/services/authService.js';
+import { createUser } from '../../src/services/userService.js';
 import { APIError } from '../../src/utils/apiError.js';
 
-describe('AuthService — registerUser', () => {
-  it('should create a new user and return the user object', async () => {
-    const user = await registerUser({
-      name: 'Test Admin',
-      email: 'admin@test.com',
-      password: 'Test@1234',
-      role: 'HQ_ADMIN'
-    });
-
-    expect(user).toBeDefined();
-    expect(user.email).toBe('admin@test.com');
-    expect(user.role).toBe('HQ_ADMIN');
-    // Password must NOT be stored in plain text
-    expect(user.password).not.toBe('Test@1234');
-  });
-
-  it('should throw APIError 400 if email already exists', async () => {
-    await registerUser({ name: 'A', email: 'dup@test.com', password: 'Test@1234', role: 'STATION' });
-
-    await expect(
-      registerUser({ name: 'B', email: 'dup@test.com', password: 'Test@1234', role: 'STATION' })
-    ).rejects.toMatchObject({ statusCode: 400 });
-  });
-});
 
 describe('AuthService — loginUser', () => {
   it('should return the user when credentials are correct', async () => {
-    await registerUser({ name: 'Login User', email: 'login@test.com', password: 'Test@1234', role: 'STATION' });
+    await createUser({ name: 'Login User', email: 'login@test.com', password: 'Test@1234', role: 'STATION' });
 
     const user = await loginUser('login@test.com', 'Test@1234');
     expect(user).toBeDefined();
@@ -37,7 +14,7 @@ describe('AuthService — loginUser', () => {
   });
 
   it('should throw APIError 401 for wrong password', async () => {
-    await registerUser({ name: 'Login User', email: 'wrong@test.com', password: 'Test@1234', role: 'STATION' });
+    await createUser({ name: 'Login User', email: 'wrong@test.com', password: 'Test@1234', role: 'STATION' });
 
     await expect(
       loginUser('wrong@test.com', 'WrongPassword')
@@ -53,7 +30,7 @@ describe('AuthService — loginUser', () => {
 
 describe('AuthService — getUserById', () => {
   it('should return a user with populated fields, without password', async () => {
-    const created = await registerUser({ name: 'Get Me', email: 'getme@test.com', password: 'Test@1234', role: 'STATION' });
+    const created = await createUser({ name: 'Get Me', email: 'getme@test.com', password: 'Test@1234', role: 'STATION' });
     const user = await getUserById(created._id);
 
     expect(user).toBeDefined();

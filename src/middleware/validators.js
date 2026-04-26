@@ -79,10 +79,10 @@ export const validateStationUpdate = [
   validateRequest
 ];
 
-// ─── Vehicle ──────────────────────────────────────────────────────────────────
+// ─── TukTuk ──────────────────────────────────────────────────────────────────
 
 // POST — all required
-export const validateVehicle = [
+export const validateTukTuk = [
   body('registrationNumber').notEmpty().withMessage('Registration number is required'),
   body('deviceId').notEmpty().withMessage('Device ID is required'),
   body('driverName').notEmpty().withMessage('Driver name is required'),
@@ -94,7 +94,7 @@ export const validateVehicle = [
 ];
 
 // PUT — all fields optional for partial updates
-export const validateVehicleUpdate = [
+export const validateTukTukUpdate = [
   body('registrationNumber').optional().notEmpty().withMessage('Registration number cannot be empty'),
   body('deviceId').optional().notEmpty().withMessage('Device ID cannot be empty'),
   body('driverName').optional().notEmpty().withMessage('Driver name cannot be empty'),

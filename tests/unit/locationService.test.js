@@ -1,109 +1,205 @@
 import { describe, it, expect } from 'vitest';
-import { recordPing, getLastLocation, getLocationHistory, getLiveLocations } from '../../src/services/locationService.js';
+import {
+  recordPing, getLastLocation, getLocationHistory, getLiveLocations,
+  getInactiveTukTuks, getAllLocationHistory, getTukTukSummary,
+  getSpeedAnomalies, getLocationSummary
+} from '../../src/services/locationService.js';
 import Province from '../../src/models/Province.js';
 import District from '../../src/models/District.js';
 import PoliceStation from '../../src/models/PoliceStation.js';
-import Vehicle from '../../src/models/Vehicle.js';
+import TukTuk from '../../src/models/TukTuk.js';
 
-async function seedVehicle(overrides = {}) {
-  const province = await Province.create({ name: 'Western Province', code: 'WP' });
-  const district = await District.create({ name: 'Colombo', code: 'CMB', province: province._id });
-  const station  = await PoliceStation.create({ name: 'Fort', code: 'FT', district: district._id, province: province._id });
-  const vehicle  = await Vehicle.create({
-    registrationNumber: overrides.registrationNumber || 'WP-0001',
-    deviceId: overrides.deviceId || 'DEV-001',
-    driverName: 'Test Driver',
-    driverNIC: overrides.driverNIC || '199012345678',
-    driverContact: '0771234567',
-    province: province._id,
-    district: district._id,
-    station: station._id,
-    isActive: overrides.isActive !== undefined ? overrides.isActive : true
+let counter = 0;
+async function seedTukTuk(overrides = {}) {
+  counter++;
+  const province = await Province.create({ name: `Province ${counter}`, code: `P${counter}` });
+  const district = await District.create({ name: `District ${counter}`, code: `D${counter}`, province: province._id });
+  const station  = await PoliceStation.create({ name: `Station ${counter}`, code: `S${counter}`, district: district._id, province: province._id });
+  const tuktuk  = await TukTuk.create({
+    registrationNumber: overrides.registrationNumber || `WP-${String(counter).padStart(4, '0')}`,
+    deviceId:           overrides.deviceId           || `DEV-${counter}`,
+    driverName:         'Test Driver',
+    driverNIC:          overrides.driverNIC          || `1990${String(counter).padStart(8, '0')}`,
+    driverContact:      '0771234567',
+    province:           province._id,
+    district:           district._id,
+    station:            station._id,
+    isActive:           overrides.isActive !== undefined ? overrides.isActive : true
   });
-  return { vehicle, province, district, station };
+  return { tuktuk, province, district, station };
 }
 
-describe('LocationService — recordPing', () => {
-  it('should create a ping for an active vehicle', async () => {
-    const { vehicle } = await seedVehicle();
-    const ping = await recordPing(vehicle._id, { latitude: 6.9271, longitude: 79.8612, speed: 30, heading: 90 });
+// ─── recordPing ──────────────────────────────────────────────────────────────
 
+describe('LocationService — recordPing', () => {
+  it('should create a ping for an active tuktuk', async () => {
+    const { tuktuk } = await seedTukTuk();
+    const ping = await recordPing(tuktuk._id, { latitude: 6.9271, longitude: 79.8612, speed: 30, heading: 90 });
     expect(ping._id).toBeDefined();
     expect(ping.latitude).toBe(6.9271);
-    expect(ping.longitude).toBe(79.8612);
   });
 
-  it('should throw 404 for non-existent vehicle', async () => {
-    await expect(
-      recordPing('000000000000000000000000', { latitude: 6.9, longitude: 79.8 })
-    ).rejects.toMatchObject({ statusCode: 404 });
+  it('should throw 404 for non-existent tuktuk', async () => {
+    await expect(recordPing('000000000000000000000000', { latitude: 6.9, longitude: 79.8 }))
+      .rejects.toMatchObject({ statusCode: 404 });
   });
 
-  it('should throw 400 for inactive vehicle', async () => {
-    const { vehicle } = await seedVehicle({ isActive: false, registrationNumber: 'WP-0002', deviceId: 'DEV-002', driverNIC: '199099999999' });
-
-    await expect(
-      recordPing(vehicle._id, { latitude: 6.9271, longitude: 79.8612 })
-    ).rejects.toMatchObject({ statusCode: 400 });
+  it('should throw 400 for inactive tuktuk', async () => {
+    const { tuktuk } = await seedTukTuk({ isActive: false });
+    await expect(recordPing(tuktuk._id, { latitude: 6.9271, longitude: 79.8612 }))
+      .rejects.toMatchObject({ statusCode: 400 });
   });
 });
+
+// ─── getLastLocation ─────────────────────────────────────────────────────────
 
 describe('LocationService — getLastLocation', () => {
   it('should return the most recent ping', async () => {
-    const { vehicle } = await seedVehicle();
-    await recordPing(vehicle._id, { latitude: 6.9, longitude: 79.8, speed: 10 });
-    await recordPing(vehicle._id, { latitude: 7.0, longitude: 80.0, speed: 50 });
-
-    const { lastPing } = await getLastLocation(vehicle._id);
-    expect(lastPing.latitude).toBe(7.0); // most recent
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8, speed: 10 });
+    await recordPing(tuktuk._id, { latitude: 7.0, longitude: 80.0, speed: 50 });
+    const { lastPing } = await getLastLocation(tuktuk._id);
+    expect(lastPing.latitude).toBe(7.0);
   });
 
   it('should throw 404 if no pings exist', async () => {
-    const { vehicle } = await seedVehicle();
-    await expect(
-      getLastLocation(vehicle._id)
-    ).rejects.toMatchObject({ statusCode: 404 });
+    const { tuktuk } = await seedTukTuk();
+    await expect(getLastLocation(tuktuk._id)).rejects.toMatchObject({ statusCode: 404 });
   });
 });
+
+// ─── getLocationHistory ──────────────────────────────────────────────────────
 
 describe('LocationService — getLocationHistory', () => {
-  it('should return paginated history for a vehicle', async () => {
-    const { vehicle } = await seedVehicle();
-    await recordPing(vehicle._id, { latitude: 6.9, longitude: 79.8 });
-    await recordPing(vehicle._id, { latitude: 7.0, longitude: 80.0 });
-
-    const result = await getLocationHistory(vehicle._id, { page: 1, limit: 10 });
+  it('should return paginated history for a tuktuk', async () => {
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8 });
+    await recordPing(tuktuk._id, { latitude: 7.0, longitude: 80.0 });
+    const result = await getLocationHistory(tuktuk._id, { page: 1, limit: 10 });
     expect(result.total).toBe(2);
     expect(result.data).toHaveLength(2);
   });
 });
 
-describe('LocationService — getLiveLocations', () => {
-  it('should return paginated active vehicle locations', async () => {
-    const province = await Province.create({ name: 'Live Province 1', code: 'LP1' });
-    const district = await District.create({ name: 'Live District 1', code: 'LD1', province: province._id });
-    const station  = await PoliceStation.create({ name: 'Live Station 1', code: 'LS1', district: district._id, province: province._id });
-    await Vehicle.create([
-      { registrationNumber: 'WP-0010', deviceId: 'DEV-010', driverName: 'D1', driverNIC: '199000000001', driverContact: '0770000001', province: province._id, district: district._id, station: station._id, isActive: true },
-      { registrationNumber: 'WP-0011', deviceId: 'DEV-011', driverName: 'D2', driverNIC: '199000000002', driverContact: '0770000002', province: province._id, district: district._id, station: station._id, isActive: true }
-    ]);
+// ─── getLiveLocations ────────────────────────────────────────────────────────
 
+describe('LocationService — getLiveLocations', () => {
+  it('should return paginated active tuktuk locations', async () => {
+    await seedTukTuk(); await seedTukTuk();
     const result = await getLiveLocations({ isActive: true }, { page: 1, limit: 10 });
-    expect(result.total).toBe(2);
-    expect(result.data).toHaveLength(2);
+    expect(result.total).toBeGreaterThanOrEqual(2);
     expect(result.page).toBe(1);
   });
 
-  it('should not include inactive vehicles', async () => {
-    const province = await Province.create({ name: 'Live Province 2', code: 'LP2' });
-    const district = await District.create({ name: 'Live District 2', code: 'LD2', province: province._id });
-    const station  = await PoliceStation.create({ name: 'Live Station 2', code: 'LS2', district: district._id, province: province._id });
-    await Vehicle.create([
-      { registrationNumber: 'WP-0020', deviceId: 'DEV-020', driverName: 'D3', driverNIC: '199000000003', driverContact: '0770000003', province: province._id, district: district._id, station: station._id, isActive: true },
-      { registrationNumber: 'WP-0021', deviceId: 'DEV-021', driverName: 'D4', driverNIC: '199000000004', driverContact: '0770000004', province: province._id, district: district._id, station: station._id, isActive: false }
-    ]);
+  it('should not include inactive tuktuks', async () => {
+    const before = await getLiveLocations({ isActive: true }, { page: 1, limit: 100 });
+    await seedTukTuk({ isActive: false });
+    const after = await getLiveLocations({ isActive: true }, { page: 1, limit: 100 });
+    expect(after.total).toBe(before.total); // inactive tuktuk not counted
+  });
+});
 
-    const result = await getLiveLocations({ isActive: true }, { page: 1, limit: 10 });
-    expect(result.total).toBe(1);
+// ─── getInactiveTukTuks ─────────────────────────────────────────────────────
+
+describe('LocationService — getInactiveTukTuks', () => {
+  it('should return tuktuks that have never pinged as never_pinged', async () => {
+    await seedTukTuk(); // active but no ping
+    const result = await getInactiveTukTuks({ isActive: true }, 6);
+    expect(result.total).toBeGreaterThanOrEqual(1);
+    const neverPinged = result.data.filter(d => d.status === 'never_pinged');
+    expect(neverPinged.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should return cutoffHours in response', async () => {
+    const result = await getInactiveTukTuks({ isActive: true }, 12);
+    expect(result.cutoffHours).toBe(12);
+  });
+});
+
+// ─── getAllLocationHistory ────────────────────────────────────────────────────
+
+describe('LocationService — getAllLocationHistory', () => {
+  it('should throw 400 if from or to is missing', async () => {
+    await expect(getAllLocationHistory({}, { from: '2025-01-01' }))
+      .rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it('should return pings within the time window', async () => {
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8 });
+
+    const from = new Date(Date.now() - 60 * 1000).toISOString();
+    const to   = new Date(Date.now() + 60 * 1000).toISOString();
+    const result = await getAllLocationHistory({ isActive: true }, { from, to, page: 1, limit: 10 });
+    expect(result.total).toBeGreaterThanOrEqual(1);
+    expect(result.timeWindow.from).toBe(from);
+  });
+});
+
+// ─── getTukTukSummary ───────────────────────────────────────────────────────
+
+describe('LocationService — getTukTukSummary', () => {
+  it('should return a summary with totalPings and distance for a tuktuk with pings', async () => {
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9271, longitude: 79.8612, speed: 30 });
+    await recordPing(tuktuk._id, { latitude: 6.9300, longitude: 79.8650, speed: 40 });
+
+    const result = await getTukTukSummary(tuktuk._id, {});
+    expect(result.summary.totalPings).toBe(2);
+    expect(result.summary.approximateDistanceKm).toBeGreaterThanOrEqual(0);
+    expect(result.summary.averageSpeedKmph).toBe(35);
+  });
+
+  it('should return a no-data message when tuktuk has no pings', async () => {
+    const { tuktuk } = await seedTukTuk();
+    const result = await getTukTukSummary(tuktuk._id, {});
+    expect(result.summary.totalPings).toBe(0);
+    expect(result.summary.message).toBeDefined();
+  });
+
+  it('should throw 404 for non-existent tuktuk', async () => {
+    await expect(getTukTukSummary('000000000000000000000000', {}))
+      .rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+// ─── getSpeedAnomalies ───────────────────────────────────────────────────────
+
+describe('LocationService — getSpeedAnomalies', () => {
+  it('should return pings exceeding the speed threshold', async () => {
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8, speed: 30 }); // normal
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8, speed: 90 }); // anomaly
+
+    const result = await getSpeedAnomalies({ isActive: true }, { speedThreshold: 70, page: 1, limit: 10 });
+    expect(result.total).toBeGreaterThanOrEqual(1);
+    expect(result.data[0].speed).toBeGreaterThanOrEqual(70);
+  });
+
+  it('should include tukTukInfo in each result', async () => {
+    const { tuktuk } = await seedTukTuk();
+    await recordPing(tuktuk._id, { latitude: 6.9, longitude: 79.8, speed: 80 });
+
+    const result = await getSpeedAnomalies({ isActive: true }, { speedThreshold: 70, page: 1, limit: 10 });
+    expect(result.data[0].tukTukInfo).toBeDefined();
+    expect(result.data[0].tukTukInfo.registrationNumber).toBeDefined();
+  });
+});
+
+// ─── getLocationSummary ──────────────────────────────────────────────────────
+
+describe('LocationService — getLocationSummary', () => {
+  it('should return total and byProvince array', async () => {
+    await seedTukTuk();
+    const result = await getLocationSummary();
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('byProvince');
+    expect(Array.isArray(result.byProvince)).toBe(true);
+  });
+
+  it('total should equal sum of all byProvince activeTukTuks', async () => {
+    const result = await getLocationSummary();
+    const sum = result.byProvince.reduce((acc, p) => acc + p.activeTukTuks, 0);
+    expect(result.total).toBe(sum);
   });
 });

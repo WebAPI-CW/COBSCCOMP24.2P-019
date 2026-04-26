@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app.js';
-import { registerUser } from '../../src/services/authService.js';
+import { createUser } from '../../src/services/userService.js';
 import generateToken from '../../src/utils/generateToken.js';
 
 async function getAdminToken() {
-  const user = await registerUser({ name: 'Admin', email: 'admin@prov.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
+  const user = await createUser({ name: 'Admin', email: 'admin@prov.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
   return generateToken(user._id, user.role);
 }
 
 async function getStationToken() {
-  const user = await registerUser({ name: 'Station', email: 'station@prov.com', password: 'Test@1234', role: 'STATION' });
+  const user = await createUser({ name: 'Station', email: 'station@prov.com', password: 'Test@1234', role: 'STATION' });
   return generateToken(user._id, user.role);
 }
 
@@ -65,7 +65,23 @@ describe('POST /api/v1/provinces', () => {
   });
 });
 
-describe('PUT /api/v1/provinces/:id', () => {
+describe('GET /api/v1/provinces/:id', () => {
+  it('should return a single province by id', async () => {
+    const token = await getAdminToken();
+    const created = await request(app).post('/api/v1/provinces').set('Authorization', `Bearer ${token}`).send({ name: 'Single Test Province', code: 'STP' });
+    const res = await request(app).get(`/api/v1/provinces/${created.body._id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Single Test Province');
+  });
+
+  it('should return 400 for invalid ObjectId', async () => {
+    const token = await getAdminToken();
+    const res = await request(app).get('/api/v1/provinces/not-valid').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('PATCH /api/v1/provinces/:id', () => {
   it('should allow partial update (only name, not code)', async () => {
     const token = await getAdminToken();
 
@@ -79,7 +95,7 @@ describe('PUT /api/v1/provinces/:id', () => {
 
     // Partial update — only name
     const updateRes = await request(app)
-      .put(`/api/v1/provinces/${id}`)
+      .patch(`/api/v1/provinces/${id}`)
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Updated Western' });
 

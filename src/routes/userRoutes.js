@@ -1,38 +1,37 @@
 import express from 'express';
-import {
-  getStations, getStation, createStation, updateStation, deleteStation
-} from '../controllers/stationController.js';
+import { getUsers, getUser, createUser, updateUser } from '../controllers/userController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateStation, validateStationUpdate } from '../middleware/validators.js';
+import { validateRegister } from '../middleware/validators.js';
 
 const router = express.Router();
 
 /**
  * @swagger
  * tags:
- *   name: Police Stations
- *   description: Police Station management
+ *   name: Users
+ *   description: User account management (HQ_ADMIN only)
  */
 
 /**
  * @swagger
- * /api/v1/police-stations:
+ * /api/v1/users:
  *   get:
- *     summary: Get all police stations (paginated)
- *     tags: [Police Stations]
+ *     summary: Get all users
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: province
+ *         name: role
  *         schema:
  *           type: string
- *         description: Filter by province ID
+ *           enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
+ *         description: Filter by role
  *       - in: query
- *         name: district
+ *         name: isActive
  *         schema:
- *           type: string
- *         description: Filter by district ID
+ *           type: boolean
+ *         description: Filter by active status
  *       - in: query
  *         name: page
  *         schema:
@@ -45,7 +44,7 @@ const router = express.Router();
  *           default: 10
  *     responses:
  *       200:
- *         description: Paginated list of stations
+ *         description: Paginated list of users (passwords excluded)
  *         content:
  *           application/json:
  *             schema:
@@ -58,14 +57,16 @@ const router = express.Router();
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/PoliceStation'
+ *                     $ref: '#/components/schemas/User'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  *   post:
- *     summary: Create a station (HQ_ADMIN only)
- *     tags: [Police Stations]
+ *     summary: Create a new user (HQ_ADMIN only)
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -76,33 +77,32 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - name
- *               - code
- *               - district
- *               - province
+ *               - email
+ *               - password
+ *               - role
  *             properties:
  *               name:
  *                 type: string
- *                 example: Colombo Fort Police Station
- *               code:
+ *               email:
  *                 type: string
- *                 example: CF
- *               district:
+ *               password:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109cb
+ *               role:
+ *                 type: string
+ *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
  *               province:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
- *               address:
+ *               district:
  *                 type: string
- *               contactNumber:
+ *               station:
  *                 type: string
  *     responses:
  *       201:
- *         description: Station created successfully
+ *         description: User created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PoliceStation'
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -115,15 +115,15 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
-  .get(protect, getStations)
-  .post(protect, authorize('HQ_ADMIN'), validateStation, createStation);
+  .get(protect, authorize('HQ_ADMIN'), getUsers)
+  .post(protect, authorize('HQ_ADMIN'), validateRegister, createUser);
 
 /**
  * @swagger
- * /api/v1/police-stations/{id}:
+ * /api/v1/users/{id}:
  *   get:
- *     summary: Get a single station by ID
- *     tags: [Police Stations]
+ *     summary: Get a single user by ID
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -134,22 +134,24 @@ router.route('/')
  *           type: string
  *     responses:
  *       200:
- *         description: Station details
+ *         description: User details (password excluded)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PoliceStation'
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  *   patch:
- *     summary: Update a station (HQ_ADMIN only)
- *     tags: [Police Stations]
+ *     summary: Update a user (name, email, role, assignment)
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -159,7 +161,7 @@ router.route('/')
  *         schema:
  *           type: string
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
@@ -167,23 +169,24 @@ router.route('/')
  *             properties:
  *               name:
  *                 type: string
- *               code:
+ *               email:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
+ *               province:
  *                 type: string
  *               district:
  *                 type: string
- *               province:
- *                 type: string
- *               address:
- *                 type: string
- *               contactNumber:
+ *               station:
  *                 type: string
  *     responses:
  *       200:
- *         description: Station updated successfully
+ *         description: User updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PoliceStation'
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -196,34 +199,11 @@ router.route('/')
  *         $ref: '#/components/responses/UnprocessableEntity'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
- *   delete:
- *     summary: Delete a station (HQ_ADMIN only)
- *     tags: [Police Stations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Station deleted — no content returned
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/:id')
-  .get(protect, getStation)
-  .patch(protect, authorize('HQ_ADMIN'), validateStationUpdate, updateStation)
-  .delete(protect, authorize('HQ_ADMIN'), deleteStation);
+  .get(protect, authorize('HQ_ADMIN'), getUser)
+  .patch(protect, authorize('HQ_ADMIN'), updateUser);
+
+
 
 export default router;

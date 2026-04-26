@@ -1,0 +1,74 @@
+[
+  {
+    "_id": "69ee5fa3ae1c691154d78c19",
+    "name": "Western",
+    "code": "WP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1a",
+    "name": "Central",
+    "code": "CP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1b",
+    "name": "Southern",
+    "code": "SP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1c",
+    "name": "Northern",
+    "code": "NP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1d",
+    "name": "Eastern",
+    "code": "EP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1e",
+    "name": "North Western",
+    "code": "NWP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c1f",
+    "name": "North Central",
+    "code": "NCP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c20",
+    "name": "Uva",
+    "code": "UP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa3ae1c691154d78c21",
+    "name": "Sabaragamuwa",
+    "code": "SGP",
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  }
+]

@@ -1,35 +1,35 @@
 import express from 'express';
 import {
-  getVehicles,
-  getVehicle,
-  createVehicle,
-  updateVehicle,
-  deactivateVehicle,
-  deleteVehicle
-} from '../controllers/vehicleController.js';
+  getTukTuks,
+  getTukTuk,
+  createTukTuk,
+  updateTukTuk,
+  deleteTukTuk
+} from '../controllers/tuktukController.js';
 import {
   postPing,
   getLastLocation,
-  getLocationHistory
+  getLocationHistory,
+  getTukTukSummary
 } from '../controllers/locationController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateVehicle, validateVehicleUpdate, validatePing } from '../middleware/validators.js';
+import { validateTukTuk, validateTukTukUpdate, validatePing } from '../middleware/validators.js';
 
 const router = express.Router();
 
 /**
  * @swagger
  * tags:
- *   name: Vehicles
- *   description: Vehicle management and registration
+ *   name: TukTuks
+ *   description: TukTuk management and registration
  */
 
 /**
  * @swagger
- * /api/v1/vehicles:
+ * /api/v1/tuktuks:
  *   get:
- *     summary: Get all vehicles
- *     tags: [Vehicles]
+ *     summary: Get all tuktuks
+ *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -50,6 +50,17 @@ const router = express.Router();
  *         schema:
  *           type: boolean
  *       - in: query
+ *         name: registrationNumber
+ *         schema:
+ *           type: string
+ *         description: Search by registration number (partial, case-insensitive)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           example: registrationNumber:asc
+ *         description: Sort field and direction (e.g. registrationNumber:asc, createdAt:desc)
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
@@ -61,7 +72,7 @@ const router = express.Router();
  *           default: 10
  *     responses:
  *       200:
- *         description: List of vehicles
+ *         description: Paginated list of tuktuks
  *         content:
  *           application/json:
  *             schema:
@@ -74,16 +85,14 @@ const router = express.Router();
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Vehicle'
+ *                     $ref: '#/components/schemas/TukTuk'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   post:
- *     summary: Register a new vehicle
- *     tags: [Vehicles]
+ *     summary: Register a new tuktuk
+ *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -127,34 +136,32 @@ const router = express.Router();
  *                 example: 60d0fe4f5311236168a109cc
  *     responses:
  *       201:
- *         description: Vehicle created successfully
+ *         description: TukTuk created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Vehicle'
+ *               $ref: '#/components/schemas/TukTuk'
  *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
-  .get(protect, getVehicles)
-  .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateVehicle, createVehicle);
+  .get(protect, getTukTuks)
+  .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateTukTuk, createTukTuk);
 
 /**
  * @swagger
- * /api/v1/vehicles/{id}:
+ * /api/v1/tuktuks/{id}:
  *   get:
- *     summary: Get a standard vehicle
- *     tags: [Vehicles]
+ *     summary: Get a standard tuktuk
+ *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -165,20 +172,22 @@ router.route('/')
  *           type: string
  *     responses:
  *       200:
- *         description: Vehicle details
+ *         description: TukTuk details
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Vehicle'
+ *               $ref: '#/components/schemas/TukTuk'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *   put:
- *     summary: Update a vehicle
- *     tags: [Vehicles]
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *   patch:
+ *     summary: Update a tuktuk (HQ_ADMIN, PROVINCIAL)
+ *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -195,20 +204,26 @@ router.route('/')
  *             type: object
  *     responses:
  *       200:
- *         description: Vehicle updated successfully
+ *         description: TukTuk updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Vehicle'
+ *               $ref: '#/components/schemas/TukTuk'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       422:
+ *         $ref: '#/components/responses/UnprocessableEntity'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   delete:
- *     summary: Delete a vehicle
- *     tags: [Vehicles]
+ *     summary: Delete a tuktuk (HQ_ADMIN only)
+ *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -219,62 +234,30 @@ router.route('/')
  *           type: string
  *     responses:
  *       204:
- *         description: Vehicle deleted
+ *         description: TukTuk deleted — no content returned
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/:id')
-  .get(protect, getVehicle)
-  .put(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateVehicleUpdate, updateVehicle)
-  .delete(protect, authorize('HQ_ADMIN'), deleteVehicle);
-
-/**
- * @swagger
- * /api/v1/vehicles/{id}/deactivate:
- *   put:
- *     summary: Deactivate a vehicle
- *     tags: [Vehicles]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Vehicle deactivated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Vehicle deactivated
- *                 vehicle:
- *                   $ref: '#/components/schemas/Vehicle'
- *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.put('/:id/deactivate', protect, authorize('HQ_ADMIN'), deactivateVehicle);
+  .get(protect, getTukTuk)
+  .patch(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateTukTukUpdate, updateTukTuk)
+  .delete(protect, authorize('HQ_ADMIN'), deleteTukTuk);
 
 
 /**
  * @swagger
- * /api/v1/vehicles/{id}/ping:
+ * /api/v1/tuktuks/{id}/ping:
  *   post:
  *     summary: Post a location ping from a device
- *     tags: [Vehicles]
+ *     tags: [Location]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -300,32 +283,30 @@ router.put('/:id/deactivate', protect, authorize('HQ_ADMIN'), deactivateVehicle)
  *                 type: integer
  *     responses:
  *       201:
- *         description: Location ping registered
+ *         description: Location ping recorded successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LocationPing'
  *       400:
- *         description: Vehicle inactive
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
 
 /**
  * @swagger
- * /api/v1/vehicles/{id}/location:
+ * /api/v1/tuktuks/{id}/location:
  *   get:
- *     summary: Get last known location of a vehicle
- *     tags: [Vehicles]
+ *     summary: Get last known location of a tuktuk
+ *     tags: [Location]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -342,25 +323,25 @@ router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
  *             schema:
  *               type: object
  *               properties:
- *                 vehicle:
- *                   $ref: '#/components/schemas/Vehicle'
+ *                 tukTuk:
+ *                   $ref: '#/components/schemas/TukTuk'
  *                 lastLocation:
  *                   $ref: '#/components/schemas/LocationPing'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
- *         description: No location data found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/:id/location', protect, getLastLocation);
 
 /**
  * @swagger
- * /api/v1/vehicles/{id}/history:
+ * /api/v1/tuktuks/{id}/history:
  *   get:
- *     summary: Get location history of a vehicle
- *     tags: [Vehicles]
+ *     summary: Get location history of a tuktuk
+ *     tags: [Location]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -391,7 +372,7 @@ router.get('/:id/location', protect, getLastLocation);
  *           default: 100
  *     responses:
  *       200:
- *         description: Location history
+ *         description: Paginated location history
  *         content:
  *           application/json:
  *             schema:
@@ -405,13 +386,53 @@ router.get('/:id/location', protect, getLastLocation);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/LocationPing'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
- *         description: Vehicle not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/:id/history', protect, getLocationHistory);
+
+/**
+ * @swagger
+ * /api/v1/tuktuks/{id}/summary:
+ *   get:
+ *     summary: Get movement summary for a tuktuk (distance, duration, speed stats)
+ *     tags: [TukTuks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Start of time window (ISO 8601)
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: End of time window (ISO 8601)
+ *     responses:
+ *       200:
+ *         description: Movement summary with distance, speed and duration
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:id/summary', protect, getTukTukSummary);
 
 export default router;

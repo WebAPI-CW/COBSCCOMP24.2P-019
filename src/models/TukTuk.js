@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const vehicleSchema = new mongoose.Schema({
+const tukTukSchema = new mongoose.Schema({
   registrationNumber: {
     type: String,
     required: true,
@@ -50,4 +50,4 @@ const vehicleSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-export default mongoose.model('Vehicle', vehicleSchema);
+export default mongoose.model('TukTuk', tukTukSchema);

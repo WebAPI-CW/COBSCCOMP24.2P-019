@@ -33,7 +33,9 @@ export const createDistrict = async (req, res, next) => {
   try {
     const { name, code, province } = req.body;
     const district = await DistrictService.createDistrict({ name, code, province });
-    res.status(201).json(district);
+    res.status(201)
+      .location(`/api/v1/districts/${district._id}`)
+      .json(district);
   } catch (error) {
     next(error);
   }

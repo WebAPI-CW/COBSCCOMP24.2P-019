@@ -9,13 +9,15 @@ export const register = async (req, res, next) => {
     const { name, email, password, role, province, district, station } = req.body;
     const user = await AuthService.registerUser({ name, email, password, role, province, district, station });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id, user.role)
-    });
+    res.status(201)
+      .location(`/api/v1/auth/me`)
+      .json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id, user.role)
+      });
   } catch (error) {
     next(error);
   }

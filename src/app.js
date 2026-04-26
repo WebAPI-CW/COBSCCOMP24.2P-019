@@ -48,6 +48,20 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// 406 Not Acceptable — this API only produces JSON
+// Reject requests that explicitly exclude application/json from Accept header
+app.use('/api/', (req, res, next) => {
+  const accept = req.headers.accept || '*/*';
+  if (!accept.includes('application/json') && !accept.includes('*/*')) {
+    return next(new APIError(
+      406,
+      'Not Acceptable',
+      'This API only produces application/json. Set Accept: application/json or */*'
+    ));
+  }
+  next();
+});
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1/auth', authRoutes);

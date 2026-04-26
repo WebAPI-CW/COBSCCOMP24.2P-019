@@ -65,7 +65,7 @@ export const getLiveLocations = async (req, res, next) => {
     if (district) vehicleFilter.district = district;
     if (station)  vehicleFilter.station  = station;
 
-    const result = await LocationService.getLiveLocations(vehicleFilter);
+    const result = await LocationService.getLiveLocations(vehicleFilter, req.query);
     res.json(result);
   } catch (error) {
     next(error);

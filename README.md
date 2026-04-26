@@ -156,6 +156,31 @@ Full documentation available at `/api-docs` (Swagger UI).
   replicas. High concurrent load would bottleneck queries.
 - **Rate limiting** — Applied per IP. No per device throttle 
   on the ping endpoint.
+- **HTTP Caching** — No `ETag` or `Cache-Control` headers implemented.
+  Repeated identical GET requests are not cached at the HTTP layer.
+- **Concurrency** — No optimistic locking (no `version` field or
+  `If-Match` header support). Simultaneous PUT requests on the same
+  resource follow a last-write-wins strategy.
+- **Field Projection** — No `?fields=` query parameter support.
+  All responses return the full resource representation.
 - **Docker** — Not used for deployment but a Dockerfile is 
   included for local containerized setup.
-  
+
+---
+
+## WSO2 API Design Notes
+
+This API follows WSO2 REST API Design Guidelines and the Richardson
+Maturity Model Level 2:
+
+- **Collection resources** — `/provinces`, `/districts`, `/stations`,
+  `/vehicles`, `/locations` use plural nouns.
+- **Atomic resources** — `/:id` sub-paths identify individual records.
+- **Controller resources** — `/api/v1/vehicles/:id/deactivate` (PUT)
+  and `/api/v1/vehicles/:id/ping` (POST) are intentional controller
+  resources using verbs, as permitted by WSO2 guidelines for
+  state-change and data-submission actions that do not map cleanly
+  to a standard CRUD method.
+- **URI versioning** — All routes are prefixed with `/api/v1/`.
+- **Error format** — All error responses include `code`, `message`,
+  `description`, and `moreInfo` fields per WSO2 Section 8.

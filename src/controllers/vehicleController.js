@@ -40,7 +40,9 @@ export const createVehicle = async (req, res, next) => {
     const vehicle = await VehicleService.createVehicle({
       registrationNumber, deviceId, driverName, driverNIC, driverContact, province, district, station
     });
-    res.status(201).json(vehicle);
+    res.status(201)
+      .location(`/api/v1/vehicles/${vehicle._id}`)
+      .json(vehicle);
   } catch (error) {
     next(error);
   }

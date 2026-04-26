@@ -35,7 +35,9 @@ export const createStation = async (req, res, next) => {
   try {
     const { name, code, district, province, address, contactNumber } = req.body;
     const station = await StationService.createStation({ name, code, district, province, address, contactNumber });
-    res.status(201).json(station);
+    res.status(201)
+      .location(`/api/v1/stations/${station._id}`)
+      .json(station);
   } catch (error) {
     next(error);
   }

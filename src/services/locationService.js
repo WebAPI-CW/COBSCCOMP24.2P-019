@@ -79,17 +79,28 @@ export const getLocationHistory = async (vehicleId, query) => {
 };
 
 /**
- * Return the latest ping for every active vehicle, with optional province/district/station filters.
- * Uses a single aggregation pipeline to avoid N separate queries.
+ * Return the latest ping for a paginated slice of active vehicles.
+ * Accepts page/limit query params alongside province/district/station filters.
  */
-export const getLiveLocations = async (vehicleFilter) => {
+export const getLiveLocations = async (vehicleFilter, query) => {
+  const page   = parseInt(query.page,  10) || 1;
+  const limit  = parseInt(query.limit, 10) || 20;
+  const offset = (page - 1) * limit;
+
+  // Total count of matching vehicles (for pagination meta)
+  const total = await Vehicle.countDocuments(vehicleFilter);
+
+  // Fetch only the current page of vehicles
   const vehicles = await Vehicle.find(vehicleFilter)
+    .skip(offset)
+    .limit(limit)
     .populate('province', 'name code')
     .populate('district', 'name code')
-    .populate('station', 'name code');
+    .populate('station',  'name code');
 
   const vehicleIds = vehicles.map(v => v._id);
 
+  // Single aggregation to get the latest ping for each vehicle on this page
   const latestPings = await LocationPing.aggregate([
     { $match:  { vehicle: { $in: vehicleIds } } },
     { $sort:   { timestamp: -1 } },
@@ -97,16 +108,16 @@ export const getLiveLocations = async (vehicleFilter) => {
   ]);
 
   const data = vehicles.map(vehicle => {
-    const pingDoc = latestPings.find(p => p._id.toString() === vehicle._id.toString());
+    const pingDoc  = latestPings.find(p => p._id.toString() === vehicle._id.toString());
     const lastPing = pingDoc ? pingDoc.lastPing : null;
     return {
       vehicle: {
-        _id: vehicle._id,
+        _id:                vehicle._id,
         registrationNumber: vehicle.registrationNumber,
-        driverName: vehicle.driverName,
-        province: vehicle.province,
-        district: vehicle.district,
-        station: vehicle.station
+        driverName:         vehicle.driverName,
+        province:           vehicle.province,
+        district:           vehicle.district,
+        station:            vehicle.station
       },
       lastLocation: lastPing ? {
         latitude:  lastPing.latitude,
@@ -118,5 +129,19 @@ export const getLiveLocations = async (vehicleFilter) => {
     };
   });
 
-  return { total: data.length, data };
+  // Preserve filter params in next/previous links
+  const filterQs = Object.entries(query)
+    .filter(([k]) => k !== 'page' && k !== 'limit')
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+  const qsSuffix = filterQs ? `&${filterQs}` : '';
+
+  return {
+    page,
+    limit,
+    total,
+    next:     offset + limit < total ? `?page=${page + 1}&limit=${limit}${qsSuffix}` : null,
+    previous: offset > 0             ? `?page=${page - 1}&limit=${limit}${qsSuffix}` : null,
+    data
+  };
 };

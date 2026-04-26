@@ -29,24 +29,49 @@ const router = express.Router();
  *         name: province
  *         schema:
  *           type: string
+ *         description: Filter by province ID
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
+ *         description: Filter by district ID
  *       - in: query
  *         name: station
  *         schema:
  *           type: string
+ *         description: Filter by station ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Results per page
  *     responses:
  *       200:
- *         description: Global live positions
+ *         description: Paginated live positions
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
  *                 total:
  *                   type: integer
+ *                 next:
+ *                   type: string
+ *                   nullable: true
+ *                 previous:
+ *                   type: string
+ *                   nullable: true
  *                 data:
  *                   type: array
  *                   items:

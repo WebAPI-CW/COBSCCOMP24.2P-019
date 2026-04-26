@@ -31,7 +31,9 @@ export const createProvince = async (req, res, next) => {
   try {
     const { name, code } = req.body;
     const province = await ProvinceService.createProvince({ name, code });
-    res.status(201).json(province);
+    res.status(201)
+      .location(`/api/v1/provinces/${province._id}`)
+      .json(province);
   } catch (error) {
     next(error);
   }

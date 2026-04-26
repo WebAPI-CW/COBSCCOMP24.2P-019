@@ -8,7 +8,10 @@
     "dev": "nodemon server.js",
     "seed": "node data/seed.js",
     "export": "node data/export.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:acceptance": "vitest run tests/acceptance",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +33,9 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "mongodb-memory-server": "^11.0.1",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.5"
   }
 }

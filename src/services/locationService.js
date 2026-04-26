@@ -1,147 +1,185 @@
 import LocationPing from '../models/LocationPing.js';
-import Vehicle from '../models/Vehicle.js';
+import TukTuk from '../models/TukTuk.js';
 import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
 
-/**
- * Record a new GPS ping for a vehicle.
- * Throws APIError 404 if vehicle not found, 400 if vehicle is inactive.
- */
-export const recordPing = async (vehicleId, { latitude, longitude, speed, heading }) => {
-  const vehicle = await Vehicle.findById(vehicleId);
-  if (!vehicle) {
-    throw new APIError(404, 'Not Found', 'Vehicle not found');
-  }
-  if (!vehicle.isActive) {
-    throw new APIError(400, 'Bad Request', 'Vehicle is not active');
-  }
-
-  return LocationPing.create({
-    vehicle: vehicleId,
-    latitude,
-    longitude,
-    speed: speed || 0,
-    heading: heading || 0,
-    timestamp: new Date()
-  });
+export const recordPing = async (tukTukId, { latitude, longitude, speed, heading }) => {
+  const tukTuk = await TukTuk.findById(tukTukId);
+  if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
+  if (!tukTuk.isActive) throw new APIError(400, 'Bad Request', 'TukTuk is not active');
+  return LocationPing.create({ tukTuk: tukTukId, latitude, longitude, speed: speed || 0, heading: heading || 0, timestamp: new Date() });
 };
 
-/**
- * Return the last known location for a vehicle.
- * Throws APIError 404 if vehicle not found or no pings exist.
- */
-export const getLastLocation = async (vehicleId) => {
-  const vehicle = await Vehicle.findById(vehicleId)
-    .populate('province', 'name code')
-    .populate('district', 'name code')
-    .populate('station', 'name code');
-  if (!vehicle) {
-    throw new APIError(404, 'Not Found', 'Vehicle not found');
-  }
-
-  const lastPing = await LocationPing.findOne({ vehicle: vehicleId })
-    .sort({ timestamp: -1 });
-  if (!lastPing) {
-    throw new APIError(404, 'Not Found', 'No location data found for this vehicle');
-  }
-
-  return { vehicle, lastPing };
+export const getLastLocation = async (tukTukId) => {
+  const tukTuk = await TukTuk.findById(tukTukId)
+    .populate('province', 'name code').populate('district', 'name code').populate('station', 'name code');
+  if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
+  const lastPing = await LocationPing.findOne({ tukTuk: tukTukId }).sort({ timestamp: -1 });
+  if (!lastPing) throw new APIError(404, 'Not Found', 'No location data found for this tukTuk');
+  return { tukTuk, lastPing };
 };
 
-/**
- * Return paginated location history for a vehicle within an optional time window.
- * Throws APIError 404 if vehicle not found.
- */
-export const getLocationHistory = async (vehicleId, query) => {
-  const vehicle = await Vehicle.findById(vehicleId);
-  if (!vehicle) {
-    throw new APIError(404, 'Not Found', 'Vehicle not found');
-  }
-
+export const getLocationHistory = async (tukTukId, query) => {
+  const tukTuk = await TukTuk.findById(tukTukId);
+  if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
   const { from, to } = query;
-  const filter = { vehicle: vehicleId };
+  const filter = { tukTuk: tukTukId };
   if (from || to) {
     filter.timestamp = {};
     if (from) filter.timestamp.$gte = new Date(from);
     if (to)   filter.timestamp.$lte = new Date(to);
   }
-
-  const paginatedData = await getPaginationData(
-    LocationPing,
-    query,
-    filter,
-    null,   // no populate needed on ping documents
-    100,    // default 100 pings per page for history
-    { timestamp: -1 }
-  );
-
-  return { vehicle, ...paginatedData };
+  const paginatedData = await getPaginationData(LocationPing, query, filter, null, 100, { timestamp: -1 });
+  return { tukTuk, ...paginatedData };
 };
 
-/**
- * Return the latest ping for a paginated slice of active vehicles.
- * Accepts page/limit query params alongside province/district/station filters.
- */
-export const getLiveLocations = async (vehicleFilter, query) => {
+export const getLiveLocations = async (tukTukFilter, query) => {
   const page   = parseInt(query.page,  10) || 1;
   const limit  = parseInt(query.limit, 10) || 20;
   const offset = (page - 1) * limit;
-
-  // Total count of matching vehicles (for pagination meta)
-  const total = await Vehicle.countDocuments(vehicleFilter);
-
-  // Fetch only the current page of vehicles
-  const vehicles = await Vehicle.find(vehicleFilter)
-    .skip(offset)
-    .limit(limit)
-    .populate('province', 'name code')
-    .populate('district', 'name code')
-    .populate('station',  'name code');
-
-  const vehicleIds = vehicles.map(v => v._id);
-
-  // Single aggregation to get the latest ping for each vehicle on this page
+  const total  = await TukTuk.countDocuments(tukTukFilter);
+  const tukTuks = await TukTuk.find(tukTukFilter)
+    .skip(offset).limit(limit)
+    .populate('province', 'name code').populate('district', 'name code').populate('station', 'name code');
+  const tukTukIds = tukTuks.map(v => v._id);
   const latestPings = await LocationPing.aggregate([
-    { $match:  { vehicle: { $in: vehicleIds } } },
+    { $match:  { tukTuk: { $in: tukTukIds } } },
     { $sort:   { timestamp: -1 } },
-    { $group:  { _id: '$vehicle', lastPing: { $first: '$$ROOT' } } }
+    { $group:  { _id: '$tukTuk', lastPing: { $first: '$$ROOT' } } }
   ]);
-
-  const data = vehicles.map(vehicle => {
-    const pingDoc  = latestPings.find(p => p._id.toString() === vehicle._id.toString());
+  const data = tukTuks.map(tukTuk => {
+    const pingDoc  = latestPings.find(p => p._id.toString() === tukTuk._id.toString());
     const lastPing = pingDoc ? pingDoc.lastPing : null;
     return {
-      vehicle: {
-        _id:                vehicle._id,
-        registrationNumber: vehicle.registrationNumber,
-        driverName:         vehicle.driverName,
-        province:           vehicle.province,
-        district:           vehicle.district,
-        station:            vehicle.station
-      },
-      lastLocation: lastPing ? {
-        latitude:  lastPing.latitude,
-        longitude: lastPing.longitude,
-        speed:     lastPing.speed,
-        heading:   lastPing.heading,
-        timestamp: lastPing.timestamp
-      } : null
+      tukTuk: { _id: tukTuk._id, registrationNumber: tukTuk.registrationNumber, driverName: tukTuk.driverName,
+        province: tukTuk.province, district: tukTuk.district, station: tukTuk.station },
+      lastLocation: lastPing ? { latitude: lastPing.latitude, longitude: lastPing.longitude,
+        speed: lastPing.speed, heading: lastPing.heading, timestamp: lastPing.timestamp } : null
     };
   });
-
-  // Preserve filter params in next/previous links
   const filterQs = Object.entries(query)
-    .filter(([k]) => k !== 'page' && k !== 'limit')
-    .map(([k, v]) => `${k}=${v}`)
-    .join('&');
+    .filter(([k]) => k !== 'page' && k !== 'limit').map(([k, v]) => `${k}=${v}`).join('&');
   const qsSuffix = filterQs ? `&${filterQs}` : '';
-
   return {
-    page,
-    limit,
-    total,
+    page, limit, total,
     next:     offset + limit < total ? `?page=${page + 1}&limit=${limit}${qsSuffix}` : null,
     previous: offset > 0             ? `?page=${page - 1}&limit=${limit}${qsSuffix}` : null,
     data
   };
+};
+
+export const getInactiveTukTuks = async (tukTukFilter, hours = 6) => {
+  const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const tukTuks = await TukTuk.find(tukTukFilter)
+    .populate('province', 'name code').populate('district', 'name code').populate('station', 'name code');
+  const tukTukIds = tukTuks.map(v => v._id);
+  const latestPings = await LocationPing.aggregate([
+    { $match:  { tukTuk: { $in: tukTukIds } } },
+    { $sort:   { timestamp: -1 } },
+    { $group:  { _id: '$tukTuk', lastPing: { $first: '$$ROOT' } } }
+  ]);
+  const data = tukTuks
+    .filter(tukTuk => {
+      const pingDoc = latestPings.find(p => p._id.toString() === tukTuk._id.toString());
+      return !pingDoc || pingDoc.lastPing.timestamp < cutoffTime;
+    })
+    .map(tukTuk => {
+      const pingDoc  = latestPings.find(p => p._id.toString() === tukTuk._id.toString());
+      const lastPing = pingDoc ? pingDoc.lastPing : null;
+      const hoursSince = lastPing
+        ? parseFloat(((Date.now() - new Date(lastPing.timestamp)) / 3600000).toFixed(1)) : null;
+      return {
+        tukTuk: { _id: tukTuk._id, registrationNumber: tukTuk.registrationNumber,
+          driverName: tukTuk.driverName, province: tukTuk.province, district: tukTuk.district, station: tukTuk.station },
+        lastLocation: lastPing
+          ? { latitude: lastPing.latitude, longitude: lastPing.longitude, timestamp: lastPing.timestamp } : null,
+        hoursSinceLastPing: hoursSince,
+        status: lastPing ? 'signal_lost' : 'never_pinged'
+      };
+    });
+  return { cutoffHours: hours, total: data.length, data };
+};
+
+export const getAllLocationHistory = async (tukTukFilter, query) => {
+  const { from, to } = query;
+  if (!from || !to) throw new APIError(400, 'Bad Request', 'from and to query parameters are required');
+  const tukTuks = await TukTuk.find(tukTukFilter).select('_id');
+  const filter = {
+    tukTuk:   { $in: tukTuks.map(v => v._id) },
+    timestamp: { $gte: new Date(from), $lte: new Date(to) }
+  };
+  const paginatedData = await getPaginationData(LocationPing, query, filter, null, 50, { timestamp: -1 });
+  return { timeWindow: { from, to }, ...paginatedData };
+};
+
+export const getTukTukSummary = async (tukTukId, query) => {
+  const tukTuk = await TukTuk.findById(tukTukId)
+    .populate('province', 'name code').populate('district', 'name code').populate('station', 'name code');
+  if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
+  const { from, to } = query;
+  const filter = { tukTuk: tukTukId };
+  if (from || to) {
+    filter.timestamp = {};
+    if (from) filter.timestamp.$gte = new Date(from);
+    if (to)   filter.timestamp.$lte = new Date(to);
+  }
+  const pings = await LocationPing.find(filter).sort({ timestamp: 1 });
+  if (pings.length === 0) {
+    return {
+      tukTuk: { registrationNumber: tukTuk.registrationNumber, driverName: tukTuk.driverName },
+      summary: { totalPings: 0, message: 'No location data in this time window' }
+    };
+  }
+  let totalDistance = 0;
+  for (let i = 1; i < pings.length; i++) {
+    const prev = pings[i - 1]; const curr = pings[i]; const R = 6371;
+    const dLat = (curr.latitude  - prev.latitude)  * Math.PI / 180;
+    const dLon = (curr.longitude - prev.longitude) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(prev.latitude*Math.PI/180)*Math.cos(curr.latitude*Math.PI/180)*Math.sin(dLon/2)**2;
+    totalDistance += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  const first = pings[0]; const last = pings[pings.length - 1];
+  const avgSpeed = pings.reduce((s, p) => s + p.speed, 0) / pings.length;
+  return {
+    tukTuk: { _id: tukTuk._id, registrationNumber: tukTuk.registrationNumber, driverName: tukTuk.driverName,
+      province: tukTuk.province, district: tukTuk.district, station: tukTuk.station },
+    summary: {
+      totalPings: pings.length, firstSeen: first.timestamp, lastSeen: last.timestamp,
+      durationHours: parseFloat(((new Date(last.timestamp) - new Date(first.timestamp)) / 3600000).toFixed(1)),
+      approximateDistanceKm: parseFloat(totalDistance.toFixed(2)),
+      averageSpeedKmph: parseFloat(avgSpeed.toFixed(1)),
+      maxSpeedKmph: parseFloat(Math.max(...pings.map(p => p.speed)).toFixed(1)),
+      firstLocation: { latitude: first.latitude, longitude: first.longitude },
+      lastLocation:  { latitude: last.latitude,  longitude: last.longitude }
+    }
+  };
+};
+
+export const getSpeedAnomalies = async (tukTukFilter, query) => {
+  const { speedThreshold = 70, from, to } = query;
+  const tukTuks = await TukTuk.find(tukTukFilter).select('_id registrationNumber driverName');
+  const pingFilter = { tukTuk: { $in: tukTuks.map(v => v._id) }, speed: { $gte: parseFloat(speedThreshold) } };
+  if (from || to) {
+    pingFilter.timestamp = {};
+    if (from) pingFilter.timestamp.$gte = new Date(from);
+    if (to)   pingFilter.timestamp.$lte = new Date(to);
+  }
+  const paginatedData = await getPaginationData(LocationPing, query, pingFilter, null, 50, { speed: -1 });
+  const enrichedData = paginatedData.data.map(ping => {
+    const v = tukTuks.find(v => v._id.toString() === ping.tukTuk.toString());
+    return { ...ping.toObject(), tukTukInfo: v ? { registrationNumber: v.registrationNumber, driverName: v.driverName } : null };
+  });
+  return { speedThreshold: parseFloat(speedThreshold), ...paginatedData, data: enrichedData };
+};
+
+export const getLocationSummary = async () => {
+  const summary = await TukTuk.aggregate([
+    { $match: { isActive: true } },
+    { $group: { _id: '$province', activeTukTuks: { $sum: 1 } } },
+    { $lookup: { from: 'provinces', localField: '_id', foreignField: '_id', as: 'province' } },
+    { $unwind: '$province' },
+    { $project: { province: '$province.name', code: '$province.code', activeTukTuks: 1 } },
+    { $sort: { activeTukTuks: -1 } }
+  ]);
+  return { total: summary.reduce((acc, s) => acc + s.activeTukTuks, 0), byProvince: summary };
 };

@@ -156,15 +156,8 @@ Full documentation available at `/api-docs` (Swagger UI).
   replicas. High concurrent load would bottleneck queries.
 - **Rate limiting** — Applied per IP. No per device throttle 
   on the ping endpoint.
-- **HTTP Caching** — No `ETag` or `Cache-Control` headers implemented.
-  Repeated identical GET requests are not cached at the HTTP layer.
-- **Concurrency** — No optimistic locking (no `version` field or
-  `If-Match` header support). Simultaneous PUT requests on the same
-  resource follow a last-write-wins strategy.
 - **Field Projection** — No `?fields=` query parameter support.
   All responses return the full resource representation.
-- **Docker** — Not used for deployment but a Dockerfile is 
-  included for local containerized setup.
 
 ---
 

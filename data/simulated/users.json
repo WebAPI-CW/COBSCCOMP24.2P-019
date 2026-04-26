@@ -1,0 +1,46 @@
+[
+  {
+    "_id": "69ee5fa6ae1c691154d78c58",
+    "name": "HQ Administrator",
+    "email": "admin@slpolice.lk",
+    "password": "$2b$10$83UY39WJP6ODc21OHptskerB6G8dXGnQ7f2rKxl9WWndJ/wJQGc8C",
+    "role": "HQ_ADMIN",
+    "isActive": true,
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa6ae1c691154d78c59",
+    "name": "Provincial Commander",
+    "email": "provincial@slpolice.lk",
+    "password": "$2b$10$83UY39WJP6ODc21OHptskexVkfv2AKpqZLM2MFscDkjA4PbzyzoFe",
+    "role": "PROVINCIAL",
+    "isActive": true,
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa6ae1c691154d78c5a",
+    "name": "Station OIC",
+    "email": "station@slpolice.lk",
+    "password": "$2b$10$83UY39WJP6ODc21OHptskewAEs5/RCcg4FnytKJtaRaPY/ByPcPoC",
+    "role": "STATION",
+    "isActive": true,
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ee5fa6ae1c691154d78c5b",
+    "name": "Device Unit 001",
+    "email": "device001@slpolice.lk",
+    "password": "$2b$10$83UY39WJP6ODc21OHptskeYTS5C.qegHOgOJ.P3BkK4I3MJWP5ZUO",
+    "role": "DEVICE",
+    "isActive": true,
+    "createdAt": "2026-04-16T10:00:00.000Z",
+    "updatedAt": "2026-04-16T10:00:00.000Z",
+    "__v": 0
+  }
+]

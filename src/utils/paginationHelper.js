@@ -6,9 +6,20 @@ export const getPaginationData = async (model, query, filter = {}, populateOptio
   const total = await model.countDocuments(filter);
   let queryObj = model.find(filter).skip(offset).limit(limit);
   
-  if (sortOptions) {
-    queryObj = queryObj.sort(sortOptions);
+  // Resolve sort order:
+  //   1. ?sort=field:asc or ?sort=field:desc from query string (client-driven)
+  //   2. sortOptions argument passed by the controller
+  //   3. Default: newest first
+  let resolvedSort;
+  if (query.sort) {
+    const [field, order] = query.sort.split(':');
+    resolvedSort = { [field]: order === 'asc' ? 1 : -1 };
+  } else if (sortOptions) {
+    resolvedSort = sortOptions;
+  } else {
+    resolvedSort = { createdAt: -1 };
   }
+  queryObj = queryObj.sort(resolvedSort);
 
   if (populateOptions) {
     if (Array.isArray(populateOptions)) {

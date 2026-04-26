@@ -1,19 +1,6 @@
 import User from '../models/User.js';
 import { APIError } from '../utils/apiError.js';
 
-/**
- * Register a new user.
- * Throws APIError 400 if email already exists.
- */
-export const registerUser = async ({ name, email, password, role, province, district, station }) => {
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    throw new APIError(400, 'Bad Request', 'User already exists');
-  }
-
-  const user = await User.create({ name, email, password, role, province, district, station });
-  return user;
-};
 
 /**
  * Validate credentials and return the user document.

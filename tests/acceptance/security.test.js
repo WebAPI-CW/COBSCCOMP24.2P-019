@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app.js';
-import { registerUser } from '../../src/services/authService.js';
+import { createUser } from '../../src/services/userService.js';
 import generateToken from '../../src/utils/generateToken.js';
 
 async function getAdminToken() {
-  const user = await registerUser({ name: 'Admin', email: 'admin@sec.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
+  const user = await createUser({ name: 'Admin', email: 'admin@sec.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
   return generateToken(user._id, user.role);
 }
 

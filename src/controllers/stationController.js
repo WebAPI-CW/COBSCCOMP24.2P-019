@@ -1,7 +1,8 @@
 import * as StationService from '../services/stationService.js';
+import { validateIfMatch } from '../utils/etagHelper.js';
 
 // @desc    Get all stations
-// @route   GET /api/v1/stations
+// @route   GET /api/v1/police-stations
 // @access  Private
 export const getStations = async (req, res, next) => {
   try {
@@ -17,7 +18,7 @@ export const getStations = async (req, res, next) => {
 };
 
 // @desc    Get single station
-// @route   GET /api/v1/stations/:id
+// @route   GET /api/v1/police-stations/:id
 // @access  Private
 export const getStation = async (req, res, next) => {
   try {
@@ -29,14 +30,14 @@ export const getStation = async (req, res, next) => {
 };
 
 // @desc    Create station
-// @route   POST /api/v1/stations
+// @route   POST /api/v1/police-stations
 // @access  Private (HQ_ADMIN only)
 export const createStation = async (req, res, next) => {
   try {
     const { name, code, district, province, address, contactNumber } = req.body;
     const station = await StationService.createStation({ name, code, district, province, address, contactNumber });
     res.status(201)
-      .location(`/api/v1/stations/${station._id}`)
+      .location(`/api/v1/police-stations/${station._id}`)
       .json(station);
   } catch (error) {
     next(error);
@@ -44,10 +45,14 @@ export const createStation = async (req, res, next) => {
 };
 
 // @desc    Update station
-// @route   PUT /api/v1/stations/:id
+// @route   PUT /api/v1/police-stations/:id
 // @access  Private (HQ_ADMIN only)
 export const updateStation = async (req, res, next) => {
   try {
+    if (req.headers['if-match']) {
+      const current = await StationService.getStationById(req.params.id);
+      validateIfMatch(req, current);
+    }
     const { name, code, district, province, address, contactNumber } = req.body;
     const station = await StationService.updateStation(req.params.id, {
       name, code, district, province, address, contactNumber
@@ -59,7 +64,7 @@ export const updateStation = async (req, res, next) => {
 };
 
 // @desc    Delete station
-// @route   DELETE /api/v1/stations/:id
+// @route   DELETE /api/v1/police-stations/:id
 // @access  Private (HQ_ADMIN only)
 export const deleteStation = async (req, res, next) => {
   try {

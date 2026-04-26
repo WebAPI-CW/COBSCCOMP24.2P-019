@@ -1,5 +1,5 @@
 {
-  "name": "project",
+  "name": "tukpatrol-api",
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
@@ -14,7 +14,7 @@
     "test:watch": "vitest"
   },
   "keywords": [],
-  "author": "",
+  "author": "M. S. F. Shazna",
   "license": "ISC",
   "description": "",
   "dependencies": {

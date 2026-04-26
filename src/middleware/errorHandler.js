@@ -12,8 +12,8 @@ export const errorHandler = (err, req, res, next) => {
 
   // Handle Mongoose duplicate key error
   if (err.code === 11000) {
-    statusCode = 400;
-    message = 'Bad Request';
+    statusCode = 409;
+    message = 'Conflict';
     const field = Object.keys(err.keyValue || {})[0] || 'field';
     description = `Duplicate value: a record with this ${field} already exists.`;
   }

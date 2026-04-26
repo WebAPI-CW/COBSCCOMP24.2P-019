@@ -1,10 +1,7 @@
 import express from 'express';
 import {
-  getDistricts,
-  getDistrict,
-  createDistrict,
-  updateDistrict,
-  deleteDistrict
+  getDistricts, getDistrict, createDistrict, updateDistrict, deleteDistrict,
+  getStationsByDistrict
 } from '../controllers/districtController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { validateDistrict, validateDistrictUpdate } from '../middleware/validators.js';
@@ -22,7 +19,7 @@ const router = express.Router();
  * @swagger
  * /api/v1/districts:
  *   get:
- *     summary: Get all districts
+ *     summary: Get all districts (paginated)
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
@@ -44,7 +41,7 @@ const router = express.Router();
  *           default: 10
  *     responses:
  *       200:
- *         description: List of districts
+ *         description: Paginated list of districts
  *         content:
  *           application/json:
  *             schema:
@@ -59,13 +56,11 @@ const router = express.Router();
  *                   items:
  *                     $ref: '#/components/schemas/District'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   post:
- *     summary: Create a district
+ *     summary: Create a district (HQ_ADMIN only)
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
@@ -89,7 +84,6 @@ const router = express.Router();
  *               province:
  *                 type: string
  *                 example: 60d0fe4f5311236168a109ca
- *                 description: Province ID
  *     responses:
  *       201:
  *         description: District created successfully
@@ -98,23 +92,15 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/District'
  *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: Forbidden
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
   .get(protect, getDistricts)
@@ -124,7 +110,7 @@ router.route('/')
  * @swagger
  * /api/v1/districts/{id}:
  *   get:
- *     summary: Get a single district
+ *     summary: Get a single district by ID
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
@@ -141,14 +127,16 @@ router.route('/')
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/District'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
- *         description: District not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *   put:
- *     summary: Update a district
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *   patch:
+ *     summary: Update a district (HQ_ADMIN only)
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
@@ -164,9 +152,6 @@ router.route('/')
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - code
  *             properties:
  *               name:
  *                 type: string
@@ -174,6 +159,8 @@ router.route('/')
  *               code:
  *                 type: string
  *                 example: COL
+ *               province:
+ *                 type: string
  *     responses:
  *       200:
  *         description: District updated successfully
@@ -181,14 +168,20 @@ router.route('/')
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/District'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: District not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       422:
+ *         $ref: '#/components/responses/UnprocessableEntity'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   delete:
- *     summary: Delete a district
+ *     summary: Delete a district (HQ_ADMIN only)
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
@@ -200,17 +193,64 @@ router.route('/')
  *           type: string
  *     responses:
  *       204:
- *         description: District deleted
+ *         description: District deleted — no content returned
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: District not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/:id')
   .get(protect, getDistrict)
-  .put(protect, authorize('HQ_ADMIN'), validateDistrictUpdate, updateDistrict)
+  .patch(protect, authorize('HQ_ADMIN'), validateDistrictUpdate, updateDistrict)
   .delete(protect, authorize('HQ_ADMIN'), deleteDistrict);
+
+/**
+ * @swagger
+ * /api/v1/districts/{id}/police-stations:
+ *   get:
+ *     summary: Get all police stations in a district (nested resource)
+ *     tags: [Districts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: District ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           example: name:asc
+ *         description: Sort field and direction (e.g. name:asc, createdAt:desc)
+ *     responses:
+ *       200:
+ *         description: Paginated list of police stations in this district
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:id/police-stations', protect, getStationsByDistrict);
 
 export default router;

@@ -1,10 +1,6 @@
 import express from 'express';
 import {
-  getStations,
-  getStation,
-  createStation,
-  updateStation,
-  deleteStation
+  getStations, getStation, createStation, updateStation, deleteStation
 } from '../controllers/stationController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { validateStation, validateStationUpdate } from '../middleware/validators.js';
@@ -14,16 +10,16 @@ const router = express.Router();
 /**
  * @swagger
  * tags:
- *   name: Stations
+ *   name: Police Stations
  *   description: Police Station management
  */
 
 /**
  * @swagger
- * /api/v1/stations:
+ * /api/v1/police-stations:
  *   get:
- *     summary: Get all police stations
- *     tags: [Stations]
+ *     summary: Get all police stations (paginated)
+ *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -49,7 +45,7 @@ const router = express.Router();
  *           default: 10
  *     responses:
  *       200:
- *         description: List of stations
+ *         description: Paginated list of stations
  *         content:
  *           application/json:
  *             schema:
@@ -64,14 +60,12 @@ const router = express.Router();
  *                   items:
  *                     $ref: '#/components/schemas/PoliceStation'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   post:
- *     summary: Create a station
- *     tags: [Stations]
+ *     summary: Create a station (HQ_ADMIN only)
+ *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -83,27 +77,25 @@ const router = express.Router();
  *             required:
  *               - name
  *               - code
- *               - province
  *               - district
+ *               - province
  *             properties:
  *               name:
  *                 type: string
  *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
- *                 example: ST001
- *               address:
- *                 type: string
- *                 example: Fort, Colombo 01
- *               contactNumber:
- *                 type: string
- *                 example: '0112323232'
- *               province:
- *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
+ *                 example: CF
  *               district:
  *                 type: string
  *                 example: 60d0fe4f5311236168a109cb
+ *               province:
+ *                 type: string
+ *                 example: 60d0fe4f5311236168a109ca
+ *               address:
+ *                 type: string
+ *               contactNumber:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Station created successfully
@@ -112,23 +104,15 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/PoliceStation'
  *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: Forbidden
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
   .get(protect, getStations)
@@ -136,10 +120,10 @@ router.route('/')
 
 /**
  * @swagger
- * /api/v1/stations/{id}:
+ * /api/v1/police-stations/{id}:
  *   get:
- *     summary: Get a single station
- *     tags: [Stations]
+ *     summary: Get a single station by ID
+ *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -155,15 +139,17 @@ router.route('/')
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PoliceStation'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
- *         description: Station not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *   put:
- *     summary: Update a station
- *     tags: [Stations]
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *   patch:
+ *     summary: Update a station (HQ_ADMIN only)
+ *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -178,22 +164,19 @@ router.route('/')
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - code
  *             properties:
  *               name:
  *                 type: string
- *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
- *                 example: ST001
+ *               district:
+ *                 type: string
+ *               province:
+ *                 type: string
  *               address:
  *                 type: string
- *                 example: Fort, Colombo 01
  *               contactNumber:
  *                 type: string
- *                 example: '0112323232'
  *     responses:
  *       200:
  *         description: Station updated successfully
@@ -201,15 +184,21 @@ router.route('/')
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PoliceStation'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: Station not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       422:
+ *         $ref: '#/components/responses/UnprocessableEntity'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  *   delete:
- *     summary: Delete a station
- *     tags: [Stations]
+ *     summary: Delete a station (HQ_ADMIN only)
+ *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -220,17 +209,21 @@ router.route('/')
  *           type: string
  *     responses:
  *       204:
- *         description: Station deleted
+ *         description: Station deleted — no content returned
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
- *         description: Station not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/:id')
   .get(protect, getStation)
-  .put(protect, authorize('HQ_ADMIN'), validateStationUpdate, updateStation)
+  .patch(protect, authorize('HQ_ADMIN'), validateStationUpdate, updateStation)
   .delete(protect, authorize('HQ_ADMIN'), deleteStation);
 
 export default router;

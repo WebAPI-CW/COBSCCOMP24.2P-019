@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app.js';
-import { registerUser } from '../../src/services/authService.js';
+import { createUser } from '../../src/services/userService.js';
 import generateToken from '../../src/utils/generateToken.js';
 import Province from '../../src/models/Province.js';
 
 async function getAdminToken() {
-  const user = await registerUser({ name: 'Admin', email: 'admin@dist.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
+  const user = await createUser({ name: 'Admin', email: 'admin@dist.com', password: 'Admin@1234', role: 'HQ_ADMIN' });
   return generateToken(user._id, user.role);
 }
 
@@ -60,7 +60,24 @@ describe('POST /api/v1/districts', () => {
   });
 });
 
-describe('PUT /api/v1/districts/:id', () => {
+describe('GET /api/v1/districts/:id', () => {
+  it('should return a single district by id', async () => {
+    const token    = await getAdminToken();
+    const province = await seedProvince(token);
+    const created  = await request(app).post('/api/v1/districts').set('Authorization', `Bearer ${token}`).send({ name: 'Single District', code: 'SD1', province: province._id });
+    const res = await request(app).get(`/api/v1/districts/${created.body._id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Single District');
+  });
+
+  it('should return 400 for invalid ObjectId', async () => {
+    const token = await getAdminToken();
+    const res = await request(app).get('/api/v1/districts/not-valid').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('PATCH /api/v1/districts/:id', () => {
   it('should allow partial update', async () => {
     const token    = await getAdminToken();
     const province = await seedProvince(token);
@@ -73,7 +90,7 @@ describe('PUT /api/v1/districts/:id', () => {
     const id = createRes.body._id;
 
     const updateRes = await request(app)
-      .put(`/api/v1/districts/${id}`)
+      .patch(`/api/v1/districts/${id}`)
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Colombo Updated' });
 

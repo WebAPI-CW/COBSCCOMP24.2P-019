@@ -1,4 +1,5 @@
 import PoliceStation from '../models/PoliceStation.js';
+import TukTuk from '../models/TukTuk.js';
 import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
 
@@ -66,6 +67,11 @@ export const updateStation = async (id, { name, code, district, province, addres
  * Throws APIError 404 if not found.
  */
 export const deleteStation = async (id) => {
+  const tuktukCount = await TukTuk.countDocuments({ station: id });
+  if (tuktukCount > 0) {
+    throw new APIError(409, 'Conflict', 'Cannot delete police station because it has assigned tuktuks');
+  }
+
   const station = await PoliceStation.findByIdAndDelete(id);
   if (!station) {
     throw new APIError(404, 'Not Found', 'Station not found');

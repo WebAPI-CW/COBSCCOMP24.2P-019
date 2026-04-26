@@ -1,27 +1,6 @@
 import * as AuthService from '../services/authService.js';
 import generateToken from '../utils/generateToken.js';
 
-// @desc    Register user
-// @route   POST /api/v1/auth/register
-// @access  Private (HQ_ADMIN only)
-export const register = async (req, res, next) => {
-  try {
-    const { name, email, password, role, province, district, station } = req.body;
-    const user = await AuthService.registerUser({ name, email, password, role, province, district, station });
-
-    res.status(201)
-      .location(`/api/v1/auth/me`)
-      .json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id, user.role)
-      });
-  } catch (error) {
-    next(error);
-  }
-};
 
 // @desc    Login user
 // @route   POST /api/v1/auth/login

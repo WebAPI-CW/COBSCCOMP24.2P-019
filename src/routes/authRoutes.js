@@ -1,7 +1,7 @@
 import express from 'express';
-import { register, login, getMe } from '../controllers/authController.js';
+import { login, getMe } from '../controllers/authController.js';
 import { protect, authorize } from '../middleware/auth.js';
-import { validateRegister, validateLogin } from '../middleware/validators.js';
+import { validateLogin } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -12,92 +12,13 @@ const router = express.Router();
  *   description: Authentication and User management
  */
 
-/**
- * @swagger
- * /api/v1/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - role
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Silva
- *               email:
- *                 type: string
- *                 example: john@slpolice.lk
- *               password:
- *                 type: string
- *                 example: Secret@123
- *               role:
- *                 type: string
- *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
- *                 example: STATION
- *               province:
- *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
- *               district:
- *                 type: string
- *                 example: 60d0fe4f5311236168a109cb
- *               station:
- *                 type: string
- *                 example: 60d0fe4f5311236168a109cc
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 role:
- *                   type: string
- *                 token:
- *                   type: string
- *       400:
- *         description: Bad request (e.g. user already exists)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Forbidden (Not HQ_ADMIN)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/register', protect, authorize('HQ_ADMIN'), validateRegister, register);
+
 
 /**
  * @swagger
  * /api/v1/auth/login:
  *   post:
- *     summary: Login user
+ *     summary: Login and receive a JWT token
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -117,7 +38,7 @@ router.post('/register', protect, authorize('HQ_ADMIN'), validateRegister, regis
  *                 example: Admin@1234
  *     responses:
  *       200:
- *         description: Successfully logged in
+ *         description: Successfully logged in — returns user object and JWT token
  *         content:
  *           application/json:
  *             schema:
@@ -133,12 +54,12 @@ router.post('/register', protect, authorize('HQ_ADMIN'), validateRegister, regis
  *                   type: string
  *                 token:
  *                   type: string
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
- *         description: Invalid email or password, or account deactivated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/login', validateLogin, login);
 
@@ -146,23 +67,21 @@ router.post('/login', validateLogin, login);
  * @swagger
  * /api/v1/auth/me:
  *   get:
- *     summary: Get current authenticated user
+ *     summary: Get current authenticated user profile
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User details
+ *         description: Returns the currently authenticated user (no password)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/me', protect, getMe);
 

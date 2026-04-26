@@ -1,4 +1,5 @@
 import District from '../models/District.js';
+import PoliceStation from '../models/PoliceStation.js';
 import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
 
@@ -58,6 +59,11 @@ export const updateDistrict = async (id, { name, code, province }) => {
  * Throws APIError 404 if not found.
  */
 export const deleteDistrict = async (id) => {
+  const stationCount = await PoliceStation.countDocuments({ district: id });
+  if (stationCount > 0) {
+    throw new APIError(409, 'Conflict', 'Cannot delete district because it has assigned police stations');
+  }
+
   const district = await District.findByIdAndDelete(id);
   if (!district) {
     throw new APIError(404, 'Not Found', 'District not found');

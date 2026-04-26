@@ -1,4 +1,5 @@
 import Province from '../models/Province.js';
+import District from '../models/District.js';
 import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
 
@@ -52,6 +53,11 @@ export const updateProvince = async (id, { name, code }) => {
  * Throws APIError 404 if not found.
  */
 export const deleteProvince = async (id) => {
+  const districtCount = await District.countDocuments({ province: id });
+  if (districtCount > 0) {
+    throw new APIError(409, 'Conflict', 'Cannot delete province because it has assigned districts');
+  }
+
   const province = await Province.findByIdAndDelete(id);
   if (!province) {
     throw new APIError(404, 'Not Found', 'Province not found');

@@ -43,9 +43,6 @@ const exportData = async () => {
     const stations = await PoliceStation.find().lean();
     writeJSON('police-stations.json', stations);
 
-    const users = await User.find().select('-password').lean();
-    writeJSON('users.json', users);
-
     const tuktuks = await TukTuk.find().lean();
     writeJSON('tuktuks.json', tuktuks);
 
@@ -53,7 +50,7 @@ const exportData = async () => {
     console.log('\nStarting LocationPing export... (This might take a minute for 200,000+ records)');
     const pingFilepath = path.join(exportDir, 'location_history.json');
     const writeStream = fs.createWriteStream(pingFilepath, { encoding: 'utf8' });
-    
+
     writeStream.write('[\n');
 
     let count = 0;
@@ -65,10 +62,10 @@ const exportData = async () => {
         writeStream.write(',\n');
       }
       isFirst = false;
-      
+
       // Convert ObjectId and Date to strings manually for the stream
       writeStream.write(JSON.stringify(ping));
-      
+
       count++;
       if (count % 50000 === 0) {
         console.log(`... streamed ${count} pings`);
@@ -86,7 +83,7 @@ const exportData = async () => {
     console.log(`Written: data/simulated/location_history.json — ${count} records`);
     console.log('\n--- Export complete ---');
     console.log('All real data has been extracted from the database to /data/simulated/');
-    
+
     process.exit(0);
   } catch (error) {
     console.error('Export failed:', error);

@@ -49,7 +49,8 @@ cd COBSCCOMP24.2P-019
 npm install
 cp .env.example .env
 # Fill in MONGO_URI and JWT_SECRET in .env
-npm run dev
+npm run seed    # Initialize master data and location history (run once)
+npm run dev     # Start API server + live simulator
 ```
 
 ---
@@ -69,20 +70,32 @@ See `.env.example` for reference.
 
 ---
 
-## Seed Data
+## Data
 
-Run `npm run seed` to populate the database:
+TukPatrol has been running since April 16 2026.
+Location pings are collected every 30 seconds from all
+registered tuk-tuks via the live simulator.
 
-- 9 provinces (all Sri Lanka provinces)
-- 25 districts (all Sri Lanka districts)
-- 25 police stations mapped to districts
-- 200 registered tuk-tuks with province-accurate registration numbers
-- 288,000 location pings spanning 10 days of movement history
-- 3 demo users across different roles
+### Setup
+```bash
+npm run seed    # Initialize master data (run once)
+npm run dev     # Start API + live simulator
+```
 
-Static JSON files are available in the `/data` folder as simulation 
-data evidence. `sample-pings.json` shows 70 pings for vehicle 
-DEV-0001 over one week as a representative sample.
+### Simulator
+
+The simulator generates real-time location pings for all
+200 registered tuk-tuks. Patterns are determined by the
+actual current Sri Lanka time automatically:
+
+- Morning rush hour — congestion patterns, slow speeds
+- School hours — reduced speed, higher passenger count
+- Night — most tuk-tuks parked
+- April afternoons — monsoon rain speed reduction
+- Weekends — no school/office rush patterns
+
+Anomalies are detected and logged to the console in real time.
+Stop with Ctrl+C for a full session summary.
 
 ---
 

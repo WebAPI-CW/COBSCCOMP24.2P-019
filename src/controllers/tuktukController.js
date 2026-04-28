@@ -1,5 +1,6 @@
 import * as TukTukService from '../services/tuktukService.js';
 import { validateIfMatch } from '../utils/etagHelper.js';
+import { APIError } from '../utils/apiError.js';
 
 // @desc    Get all tuktuks
 // @route   GET /api/v1/tuktuks
@@ -56,7 +57,7 @@ export const createTukTuk = async (req, res, next) => {
 export const updateTukTuk = async (req, res, next) => {
   try {
     if (req.body.isActive !== undefined && req.user.role !== 'HQ_ADMIN') {
-      return res.status(403).json({ error: 'Forbidden', message: 'Only HQ_ADMIN can update isActive status' });
+      return next(new APIError(403, 'Forbidden', 'Only HQ_ADMIN can update the active status of a tuk-tuk'));
     }
     if (req.headers['if-match']) {
       const current = await TukTukService.getTukTukById(req.params.id);

@@ -77,7 +77,7 @@ Run `npm run seed` to populate the database:
 - 25 districts (all Sri Lanka districts)
 - 25 police stations mapped to districts
 - 200 registered tuk-tuks with province-accurate registration numbers
-- 14,000 location pings spanning 1 week of movement history
+- 288,000 location pings spanning 10 days of movement history
 - 3 demo users across different roles
 
 Static JSON files are available in the `/data` folder as simulation 
@@ -103,13 +103,17 @@ Full documentation available at `/api-docs` (Swagger UI).
 
 | Tag | Endpoints |
 |---|---|
-| Auth | POST /api/v1/auth/login, POST /api/v1/auth/register, GET /api/v1/auth/me |
-| Provinces | GET, POST /api/v1/provinces — GET, PUT, DELETE /api/v1/provinces/:id |
-| Districts | GET, POST /api/v1/districts — GET, PUT, DELETE /api/v1/districts/:id |
-| Stations | GET, POST /api/v1/stations — GET, PUT, DELETE /api/v1/stations/:id |
-| Vehicles | GET, POST /api/v1/vehicles — GET, PUT, DELETE /api/v1/vehicles/:id |
-| Location | POST /api/v1/vehicles/:id/ping — GET /api/v1/vehicles/:id/location |
-| Location | GET /api/v1/vehicles/:id/history — GET /api/v1/locations/live |
+| Auth | POST /api/v1/auth/login, GET /api/v1/auth/me |
+| Provinces | GET, POST /api/v1/provinces — GET, PATCH, DELETE /api/v1/provinces/:id |
+| Districts | GET, POST /api/v1/districts — GET, PATCH, DELETE /api/v1/districts/:id |
+| Users | GET, POST /api/v1/users — GET, PATCH /api/v1/users/:id |
+| Police Stations | GET, POST /api/v1/police-stations — GET, PATCH, DELETE /api/v1/police-stations/:id |
+| TukTuks | GET, POST /api/v1/tuktuks — GET, PATCH, DELETE /api/v1/tuktuks/:id |
+| Location | POST /api/v1/tuktuks/:id/ping, GET /api/v1/tuktuks/:id/location |
+| Location | GET /api/v1/tuktuks/:id/history, GET /api/v1/tuktuks/:id/summary |
+| Location | GET /api/v1/locations/live, GET /api/v1/locations/inactive |
+| Location | GET /api/v1/locations/history, GET /api/v1/locations/anomalies |
+| Location | GET /api/v1/locations/summary |
 
 ---
 

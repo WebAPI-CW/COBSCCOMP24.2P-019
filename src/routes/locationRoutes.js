@@ -259,7 +259,7 @@ router.get('/anomalies', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION')
  * @swagger
  * /api/v1/locations/summary:
  *   get:
- *     summary: Get active tuktuk count grouped by province
+ *     summary: Get active tuktuk count grouped by province (only counts active vehicles)
  *     tags: [Location]
  *     security:
  *       - bearerAuth: []

@@ -19,6 +19,9 @@ export const protect = async (req, res, next) => {
     if (!req.user) {
       return next(new APIError(401, 'Unauthorized', 'User not found'));
     }
+    if (!req.user.isActive) {
+      return next(new APIError(401, 'Unauthorized', 'Account has been deactivated'));
+    }
     next();
   } catch (error) {
     return next(new APIError(401, 'Unauthorized', 'Not authorized, token failed'));

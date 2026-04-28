@@ -43,7 +43,7 @@ const exportData = async () => {
     const stations = await PoliceStation.find().lean();
     writeJSON('police-stations.json', stations);
 
-    const users = await User.find().lean();
+    const users = await User.find().select('-password').lean();
     writeJSON('users.json', users);
 
     const tuktuks = await TukTuk.find().lean();

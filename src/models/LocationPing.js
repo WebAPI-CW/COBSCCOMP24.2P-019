@@ -25,10 +25,30 @@ const locationPingSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  // ── Simulation telemetry fields ──────────────────────────────────────────────
+  batteryLevel: {
+    type: Number,       // 0–100 percent
+    default: null
+  },
+  signalStrength: {
+    type: String,
+    enum: ['strong', 'moderate', 'weak', 'none', null],
+    default: null
+  },
+  isEngineOn: {
+    type: Boolean,
+    default: null
+  },
+  passengerCount: {
+    type: Number,       // 0–3
+    default: null
   }
 }, { timestamps: true });
 
-// index for faster queries on tukTuk and timestamp
+// Compound index for the two most frequent query patterns:
+//   1. getLastLocation  → most recent ping for one tuktuk
+//   2. getLocationHistory → time-ordered pings for one tuktuk
 locationPingSchema.index({ tukTuk: 1, timestamp: -1 });
 
 export default mongoose.model('LocationPing', locationPingSchema);

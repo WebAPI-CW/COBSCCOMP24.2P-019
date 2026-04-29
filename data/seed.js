@@ -298,13 +298,16 @@ const seedDB = async () => {
 
     // 5. Users (hash passwords manually — insertMany bypasses pre-save hooks)
     const salt = await bcrypt.genSalt(10);
+    const wpProvince   = createdProvinces.find(p => p.code === 'WP');
+    const st001Station = createdStations.find(s => s.code === 'ST001');
+    const colDistrict  = createdDistricts.find(d => d.code === 'COL');
     await User.insertMany([
-      { name: 'HQ Administrator',   email: 'admin@slpolice.lk',       password: await bcrypt.hash('Admin@1234',       salt), role: 'HQ_ADMIN',   createdAt: T0, updatedAt: T0 },
-      { name: 'Provincial Commander',email: 'provincial@slpolice.lk', password: await bcrypt.hash('Provincial@1234',  salt), role: 'PROVINCIAL', createdAt: T0, updatedAt: T0 },
-      { name: 'Station OIC',         email: 'station@slpolice.lk',    password: await bcrypt.hash('Station@1234',     salt), role: 'STATION',     createdAt: T0, updatedAt: T0 },
-      { name: 'Device Unit 001',     email: 'device001@slpolice.lk',  password: await bcrypt.hash('Device@1234',      salt), role: 'DEVICE', registrationNumber: 'WP-0001', createdAt: T0, updatedAt: T0 },
+      { name: 'HQ Administrator',    email: 'admin@slpolice.lk',      password: await bcrypt.hash('Admin@1234',      salt), role: 'HQ_ADMIN',   createdAt: T0, updatedAt: T0 },
+      { name: 'Provincial Commander',email: 'provincial@slpolice.lk', password: await bcrypt.hash('Provincial@1234', salt), role: 'PROVINCIAL', province: wpProvince._id, createdAt: T0, updatedAt: T0 },
+      { name: 'Station OIC',         email: 'station@slpolice.lk',    password: await bcrypt.hash('Station@1234',    salt), role: 'STATION',    province: wpProvince._id, district: colDistrict._id, station: st001Station._id, createdAt: T0, updatedAt: T0 },
+      { name: 'Device Unit 001',     email: 'device001@slpolice.lk',  password: await bcrypt.hash('Device@1234',     salt), role: 'DEVICE', registrationNumber: 'WP-0001', createdAt: T0, updatedAt: T0 },
     ]);
-    console.log('✔  4 demo users seeded (HQ_ADMIN, PROVINCIAL, STATION, DEVICE)');
+    console.log('✔  4 demo users seeded (HQ_ADMIN, PROVINCIAL[WP], STATION[ST001/COL/WP], DEVICE)');
 
     // 6. TukTuks
     const createdTukTuks = await TukTuk.insertMany(

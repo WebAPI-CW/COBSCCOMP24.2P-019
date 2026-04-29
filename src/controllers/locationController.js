@@ -8,12 +8,12 @@ import { injectScopeFilter, assertScope } from '../utils/scopeHelper.js';
 
 export const postPing = async (req, res, next) => {
   try {
-    const { latitude, longitude, speed, heading } = req.body;
+    const { latitude, longitude, speed, heading, batteryLevel, signalStrength, isEngineOn, passengerCount } = req.body;
     const tukTuk = await TukTukService.getTukTukByRegNumber(req.params.registrationNumber);
     if (req.user.registrationNumber?.toUpperCase() !== tukTuk.registrationNumber) {
       return next(new APIError(403, 'Forbidden', 'This device is not authorized to post pings for this tuk-tuk'));
     }
-    const ping = await LocationService.recordPing(tukTuk._id, { latitude, longitude, speed, heading });
+    const ping = await LocationService.recordPing(tukTuk._id, { latitude, longitude, speed, heading, batteryLevel, signalStrength, isEngineOn, passengerCount });
     res.status(201).json(ping);
   } catch (error) { next(error); }
 };
@@ -27,7 +27,9 @@ export const getLastLocation = async (req, res, next) => {
       tukTuk: { _id: tt._id, registrationNumber: tt.registrationNumber,
         driverName: tt.driverName, province: tt.province, district: tt.district, station: tt.station },
       lastLocation: { latitude: lastPing.latitude, longitude: lastPing.longitude,
-        speed: lastPing.speed, heading: lastPing.heading, timestamp: lastPing.timestamp }
+        speed: lastPing.speed, heading: lastPing.heading, timestamp: lastPing.timestamp,
+        batteryLevel: lastPing.batteryLevel, signalStrength: lastPing.signalStrength,
+        isEngineOn: lastPing.isEngineOn, passengerCount: lastPing.passengerCount }
     });
   } catch (error) { next(error); }
 };

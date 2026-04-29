@@ -4,11 +4,11 @@ import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
 import { parseSLT } from '../utils/dateHelper.js';
 
-export const recordPing = async (tukTukId, { latitude, longitude, speed, heading }) => {
+export const recordPing = async (tukTukId, { latitude, longitude, speed, heading, batteryLevel, signalStrength, isEngineOn, passengerCount }) => {
   const tukTuk = await TukTuk.findById(tukTukId);
   if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
   if (!tukTuk.isActive) throw new APIError(400, 'Bad Request', 'TukTuk is not active');
-  return LocationPing.create({ tukTuk: tukTukId, latitude, longitude, speed: speed || 0, heading: heading || 0, timestamp: new Date() });
+  return LocationPing.create({ tukTuk: tukTukId, latitude, longitude, speed: speed || 0, heading: heading || 0, timestamp: new Date(), batteryLevel, signalStrength, isEngineOn, passengerCount });
 };
 
 export const getLastLocation = async (tukTukId) => {

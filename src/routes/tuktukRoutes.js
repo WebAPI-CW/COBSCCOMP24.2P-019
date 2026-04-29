@@ -337,6 +337,19 @@ router.route('/:registrationNumber')
  *                 type: number
  *               heading:
  *                 type: integer
+ *               batteryLevel:
+ *                 type: number
+ *                 description: Device battery level (0–100%)
+ *               signalStrength:
+ *                 type: string
+ *                 enum: [strong, moderate, weak, none]
+ *                 description: GPS/cellular signal quality
+ *               isEngineOn:
+ *                 type: boolean
+ *                 description: Whether the engine is running at ping time
+ *               passengerCount:
+ *                 type: integer
+ *                 description: Estimated number of passengers (0–3)
  *     responses:
  *       201:
  *         description: Location ping recorded successfully

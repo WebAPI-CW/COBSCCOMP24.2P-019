@@ -15,7 +15,7 @@ export const validateRegister = [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-  body('role').optional().isIn(['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE']).withMessage('Invalid role'),
+  body('role').notEmpty().withMessage('Role is required').isIn(['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE']).withMessage('Invalid role'),
   body('registrationNumber').optional().notEmpty().withMessage('Registration number cannot be empty'),
   validateRequest
 ];
@@ -113,5 +113,9 @@ export const validatePing = [
   body('longitude').isFloat({ min: 79.7, max: 81.9 }).withMessage('Valid longitude for Sri Lanka is required (79.7 – 81.9)'),
   body('speed').optional().isFloat({ min: 0 }).withMessage('Speed must be a non-negative number'),
   body('heading').optional().isFloat({ min: 0, max: 360 }).withMessage('Heading must be between 0 and 360'),
+  body('batteryLevel').optional().isFloat({ min: 0, max: 100 }).withMessage('Battery level must be between 0 and 100'),
+  body('signalStrength').optional().isIn(['strong', 'moderate', 'weak', 'none']).withMessage('Signal strength must be strong, moderate, weak, or none'),
+  body('isEngineOn').optional().isBoolean().withMessage('isEngineOn must be a boolean'),
+  body('passengerCount').optional().isInt({ min: 0, max: 3 }).withMessage('Passenger count must be between 0 and 3'),
   validateRequest
 ];

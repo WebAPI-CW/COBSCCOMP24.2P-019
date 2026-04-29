@@ -83,7 +83,7 @@ export const updateTukTuk = async (id, body) => {
   if (isActive !== undefined) updates.isActive = isActive;
 
   const tukTuk = await TukTuk.findByIdAndUpdate(id, updates, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   });
   return tukTuk;
@@ -100,4 +100,19 @@ export const deleteTukTuk = async (id) => {
   if (!tukTuk) {
     throw new APIError(404, 'Not Found', 'TukTuk not found');
   }
+};
+
+/**
+ * Return a single tuktuk by registration number (e.g. 'WP-1234').
+ * Throws APIError 404 if not found.
+ */
+export const getTukTukByRegNumber = async (registrationNumber) => {
+  const tukTuk = await TukTuk.findOne({ registrationNumber: registrationNumber.toUpperCase() })
+    .populate('province', 'name code')
+    .populate('district', 'name code')
+    .populate('station', 'name code');
+  if (!tukTuk) {
+    throw new APIError(404, 'Not Found', 'TukTuk not found');
+  }
+  return tukTuk;
 };

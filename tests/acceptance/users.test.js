@@ -44,41 +44,41 @@ describe('GET /api/v1/users', () => {
   });
 });
 
-describe('GET /api/v1/users/:id', () => {
+describe('GET /api/v1/users/:email', () => {
   it('should return a single user without password', async () => {
     const token = await getAdminToken();
     const list = await request(app).get('/api/v1/users').set('Authorization', `Bearer ${token}`);
-    const userId = list.body.data[0]._id;
-    const res = await request(app).get(`/api/v1/users/${userId}`).set('Authorization', `Bearer ${token}`);
+    const userEmail = list.body.data[0].email;
+    const res = await request(app).get(`/api/v1/users/${encodeURIComponent(userEmail)}`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(res.body._id).toBe(userId);
+    expect(res.body.email).toBe(userEmail);
     expect(res.body.password).toBeUndefined();
   });
 
-  it('should return 400 for invalid ObjectId', async () => {
+  it('should return 404 for unknown email', async () => {
     const token = await getAdminToken();
-    const res = await request(app).get('/api/v1/users/not-valid-id').set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(400);
+    const res = await request(app).get('/api/v1/users/nobody%40unknown.com').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
   });
 });
 
-describe('PATCH /api/v1/users/:id', () => {
+describe('PATCH /api/v1/users/:email', () => {
   it('should update name and not expose password', async () => {
     const token = await getAdminToken();
     const list = await request(app).get('/api/v1/users').set('Authorization', `Bearer ${token}`);
-    const userId = list.body.data[0]._id;
-    const res = await request(app).patch(`/api/v1/users/${userId}`).set('Authorization', `Bearer ${token}`).send({ name: 'Updated Name' });
+    const userEmail = list.body.data[0].email;
+    const res = await request(app).patch(`/api/v1/users/${encodeURIComponent(userEmail)}`).set('Authorization', `Bearer ${token}`).send({ name: 'Updated Name' });
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Updated Name');
     expect(res.body.password).toBeUndefined();
   });
 });
 
-describe('PATCH /api/v1/users/:id (deactivate)', () => {
+describe('PATCH /api/v1/users/:email (deactivate)', () => {
   it('should return 200 with isActive false', async () => {
-    const token = await getAdminToken();
+    const token  = await getAdminToken();
     const target = await createUser({ name: 'Target', email: 'target@usr.com', password: 'Test@1234', role: 'STATION' });
-    const res = await request(app).patch(`/api/v1/users/${target._id}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
+    const res = await request(app).patch(`/api/v1/users/${encodeURIComponent(target.email)}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
     expect(res.status).toBe(200);
     expect(res.body.isActive).toBe(false);
   });
@@ -87,32 +87,20 @@ describe('PATCH /api/v1/users/:id (deactivate)', () => {
 describe('POST /api/v1/users', () => {
   it('should return 201 and user for valid data', async () => {
     const adminToken = await getAdminToken();
-
     const res = await request(app)
       .post('/api/v1/users')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: 'Station User', email: 'station@accept.com', password: 'Station@1234', role: 'STATION' });
-
     expect(res.status).toBe(201);
     expect(res.headers.location).toContain('/api/v1/users/');
     expect(res.body.email).toBe('station@accept.com');
   });
 
-  it('should return 400 for duplicate email', async () => {
+  it('should return 409 for duplicate email', async () => {
     const adminToken = await getAdminToken();
-
-    await request(app)
-      .post('/api/v1/users')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: 'User', email: 'dup@accept.com', password: 'Test@1234', role: 'STATION' });
-
-    const res = await request(app)
-      .post('/api/v1/users')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: 'User', email: 'dup@accept.com', password: 'Test@1234', role: 'STATION' });
-
+    await request(app).post('/api/v1/users').set('Authorization', `Bearer ${adminToken}`).send({ name: 'User', email: 'dup@accept.com', password: 'Test@1234', role: 'STATION' });
+    const res = await request(app).post('/api/v1/users').set('Authorization', `Bearer ${adminToken}`).send({ name: 'User', email: 'dup@accept.com', password: 'Test@1234', role: 'STATION' });
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('409');
   });
 });
-

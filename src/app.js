@@ -15,8 +15,12 @@ import swaggerSpec from './config/swagger.js';
 import { APIError } from './utils/apiError.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { etagMiddleware } from './middleware/etag.js';
+import { sltReplacer } from './utils/dateHelper.js';
 
 const app = express();
+
+// Serialize all Date/timestamp values in responses as SLT (UTC+05:30)
+app.set('json replacer', sltReplacer);
 
 // Security and middleware
 app.use(helmet());
@@ -88,4 +92,4 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-export default app;
+export default app;

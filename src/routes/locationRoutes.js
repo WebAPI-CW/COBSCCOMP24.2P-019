@@ -30,17 +30,20 @@ const router = express.Router();
  *         name: province
  *         schema:
  *           type: string
- *         description: Filter by province ID
+ *           example: WP
+ *         description: Filter by province code (e.g. WP)
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
- *         description: Filter by district ID
+ *           example: COL
+ *         description: Filter by district code (e.g. COL)
  *       - in: query
  *         name: station
  *         schema:
  *           type: string
- *         description: Filter by station ID
+ *           example: CF
+ *         description: Filter by station code (e.g. CF)
  *       - in: query
  *         name: page
  *         schema:
@@ -87,7 +90,7 @@ const router = express.Router();
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/live', protect, getLiveLocations);
+router.get('/live', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getLiveLocations);
 
 /**
  * @swagger
@@ -108,10 +111,14 @@ router.get('/live', protect, getLiveLocations);
  *         name: province
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Filter by province code (e.g. WP)
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: Filter by district code (e.g. COL)
  *     responses:
  *       200:
  *         description: List of inactive tuktuks with last known position and status
@@ -143,7 +150,7 @@ router.get('/live', protect, getLiveLocations);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/inactive', protect, getInactiveTukTuks);
+router.get('/inactive', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getInactiveTukTuks);
 
 /**
  * @swagger
@@ -172,10 +179,20 @@ router.get('/inactive', protect, getInactiveTukTuks);
  *         name: province
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Filter by province code (e.g. WP)
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: Filter by district code (e.g. COL)
+ *       - in: query
+ *         name: station
+ *         schema:
+ *           type: string
+ *           example: CF
+ *         description: Filter by station code (e.g. CF)
  *       - in: query
  *         name: page
  *         schema:
@@ -189,6 +206,28 @@ router.get('/inactive', protect, getInactiveTukTuks);
  *     responses:
  *       200:
  *         description: Paginated pings for all tuktuks in the time window
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 timeWindow:
+ *                   type: object
+ *                   properties:
+ *                     from:
+ *                       type: string
+ *                       format: date-time
+ *                     to:
+ *                       type: string
+ *                       format: date-time
+ *                 page:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/LocationPing'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -219,10 +258,14 @@ router.get('/history', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), 
  *         name: province
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Filter by province code (e.g. WP)
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: Filter by district code (e.g. COL)
  *       - in: query
  *         name: from
  *         schema:
@@ -246,6 +289,19 @@ router.get('/history', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), 
  *     responses:
  *       200:
  *         description: Paginated list of speed anomaly pings with tuktuk info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/LocationPing'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -289,6 +345,6 @@ router.get('/anomalies', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/summary', protect, getLocationSummary);
+router.get('/summary', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getLocationSummary);
 
 export default router;

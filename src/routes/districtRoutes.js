@@ -28,7 +28,20 @@ const router = express.Router();
  *         name: province
  *         schema:
  *           type: string
- *         description: Filter by province ID
+ *           example: WP
+ *         description: Filter by province code
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *           example: COL
+ *         description: Filter by district code (partial, case-insensitive)
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *           example: Colombo
+ *         description: Filter by district name (partial, case-insensitive)
  *       - in: query
  *         name: page
  *         schema:
@@ -83,7 +96,8 @@ const router = express.Router();
  *                 example: COL
  *               province:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *     responses:
  *       201:
  *         description: District created successfully
@@ -103,23 +117,26 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
+  .head(protect, getDistricts)
   .get(protect, getDistricts)
   .post(protect, authorize('HQ_ADMIN'), validateDistrict, createDistrict);
 
 /**
  * @swagger
- * /api/v1/districts/{id}:
+ * /api/v1/districts/{code}:
  *   get:
- *     summary: Get a single district by ID
+ *     summary: Get a single district by code
  *     tags: [Districts]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: District code (e.g. COL, GAM, KAL)
  *     responses:
  *       200:
  *         description: District details
@@ -131,6 +148,8 @@ router.route('/')
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -142,10 +161,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: District code (e.g. COL, GAM, KAL)
  *     requestBody:
  *       required: true
  *       content:
@@ -161,6 +182,8 @@ router.route('/')
  *                 example: COL
  *               province:
  *                 type: string
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *     responses:
  *       200:
  *         description: District updated successfully
@@ -187,10 +210,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: District code (e.g. COL, GAM, KAL)
  *     responses:
  *       204:
  *         description: District deleted — no content returned
@@ -205,14 +230,15 @@ router.route('/')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.route('/:id')
+router.route('/:code')
+  .head(protect, getDistrict)
   .get(protect, getDistrict)
   .patch(protect, authorize('HQ_ADMIN'), validateDistrictUpdate, updateDistrict)
   .delete(protect, authorize('HQ_ADMIN'), deleteDistrict);
 
 /**
  * @swagger
- * /api/v1/districts/{id}/police-stations:
+ * /api/v1/districts/{code}/police-stations:
  *   get:
  *     summary: Get all police stations in a district (nested resource)
  *     tags: [Districts]
@@ -220,11 +246,12 @@ router.route('/:id')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
- *         description: District ID
+ *           example: COL
+ *         description: District code
  *       - in: query
  *         name: page
  *         schema:
@@ -244,6 +271,19 @@ router.route('/:id')
  *     responses:
  *       200:
  *         description: Paginated list of police stations in this district
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PoliceStation'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       401:
@@ -251,6 +291,6 @@ router.route('/:id')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id/police-stations', protect, getStationsByDistrict);
+router.get('/:code/police-stations', protect, getStationsByDistrict);
 
 export default router;

@@ -1,10 +1,14 @@
 import crypto from 'crypto';
+import { sltReplacer } from '../utils/dateHelper.js';
 
 /**
- * ETag Middleware — Conditional GET support (RFC 7232)
+ * ETag Middleware — Conditional GET/HEAD support (RFC 7232)
  *
- * For every GET request that results in 200 OK:
- *   1. Generates a strong ETag from the MD5 hash of the response body.
+ * For every GET or HEAD request that results in 200 OK:
+ *   1. Generates a strong ETag from the MD5 hash of the response body,
+ *      serialised with the same sltReplacer that Express uses, so the ETag
+ *      is consistent with what the client receives and what validateIfMatch
+ *      recomputes for If-Match validation.
  *   2. Sets the ETag response header.
  *   3. If the request contains If-None-Match matching the ETag,
  *      responds with 304 Not Modified (no body) to save bandwidth.
@@ -13,8 +17,8 @@ import crypto from 'crypto';
  * Level 4 rubric requirement for "conditional GET methods".
  */
 export const etagMiddleware = (req, res, next) => {
-  // Only apply to GET requests
-  if (req.method !== 'GET') return next();
+  // Apply to GET and HEAD (HEAD behaves like GET without a response body)
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
 
   const originalJson = res.json.bind(res);
 
@@ -23,7 +27,7 @@ export const etagMiddleware = (req, res, next) => {
     if (res.statusCode === 200) {
       const hash = crypto
         .createHash('md5')
-        .update(JSON.stringify(body))
+        .update(JSON.stringify(body, sltReplacer))
         .digest('hex');
       const etag = `"${hash}"`;
 

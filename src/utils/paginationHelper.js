@@ -1,10 +1,14 @@
-export const getPaginationData = async (model, query, filter = {}, populateOptions = null, defaultLimit = 10, sortOptions = null) => {
+export const getPaginationData = async (model, query, filter = {}, populateOptions = null, defaultLimit = 10, sortOptions = null, projection = null) => {
   const page = parseInt(query.page, 10) || 1;
   const limit = parseInt(query.limit, 10) || defaultLimit;
   const offset = (page - 1) * limit;
 
   const total = await model.countDocuments(filter);
   let queryObj = model.find(filter).skip(offset).limit(limit);
+  
+  if (projection) {
+    queryObj = queryObj.select(projection);
+  }
   
   // Resolve sort order:
   //   1. ?sort=field:asc or ?sort=field:desc from query string (client-driven)

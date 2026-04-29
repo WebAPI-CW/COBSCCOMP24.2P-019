@@ -238,6 +238,14 @@ const WORKING_WINDOWS = [
   [sltToUTC('2026-04-27', 12,  0), sltToUTC('2026-04-27', 12,  4)],
   [sltToUTC('2026-04-27', 13,  0), sltToUTC('2026-04-27', 13,  4)],
   [sltToUTC('2026-04-27', 13, 30), sltToUTC('2026-04-27', 13, 34)],
+
+  // ── Apr 28 Mon — 6 sessions (demo day) ──
+  [sltToUTC('2026-04-28',  7, 30), sltToUTC('2026-04-28',  7, 35)],
+  [sltToUTC('2026-04-28',  9,  0), sltToUTC('2026-04-28',  9,  5)],
+  [sltToUTC('2026-04-28', 12,  0), sltToUTC('2026-04-28', 12,  5)],
+  [sltToUTC('2026-04-28', 14, 30), sltToUTC('2026-04-28', 14, 35)],
+  [sltToUTC('2026-04-28', 17,  0), sltToUTC('2026-04-28', 17,  5)],
+  [sltToUTC('2026-04-28', 20,  0), sltToUTC('2026-04-28', 20,  5)],
 ];
 
 // ── Main Seed Function ────────────────────────────────────────────────────────
@@ -294,7 +302,7 @@ const seedDB = async () => {
       { name: 'HQ Administrator',   email: 'admin@slpolice.lk',       password: await bcrypt.hash('Admin@1234',       salt), role: 'HQ_ADMIN',   createdAt: T0, updatedAt: T0 },
       { name: 'Provincial Commander',email: 'provincial@slpolice.lk', password: await bcrypt.hash('Provincial@1234',  salt), role: 'PROVINCIAL', createdAt: T0, updatedAt: T0 },
       { name: 'Station OIC',         email: 'station@slpolice.lk',    password: await bcrypt.hash('Station@1234',     salt), role: 'STATION',     createdAt: T0, updatedAt: T0 },
-      { name: 'Device Unit 001',     email: 'device001@slpolice.lk',  password: await bcrypt.hash('Device@1234',      salt), role: 'DEVICE',      createdAt: T0, updatedAt: T0 },
+      { name: 'Device Unit 001',     email: 'device001@slpolice.lk',  password: await bcrypt.hash('Device@1234',      salt), role: 'DEVICE', registrationNumber: 'WP-0001', createdAt: T0, updatedAt: T0 },
     ]);
     console.log('✔  4 demo users seeded (HQ_ADMIN, PROVINCIAL, STATION, DEVICE)');
 

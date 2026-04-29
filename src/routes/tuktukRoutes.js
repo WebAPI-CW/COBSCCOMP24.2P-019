@@ -37,14 +37,20 @@ const router = express.Router();
  *         name: province
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Filter by province code (e.g. WP)
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
+ *           example: COL
+ *         description: Filter by district code (e.g. COL)
  *       - in: query
  *         name: station
  *         schema:
  *           type: string
+ *           example: CF
+ *         description: Filter by station code (e.g. CF)
  *       - in: query
  *         name: isActive
  *         schema:
@@ -80,8 +86,16 @@ const router = express.Router();
  *               properties:
  *                 page:
  *                   type: integer
+ *                 limit:
+ *                   type: integer
  *                 total:
  *                   type: integer
+ *                 next:
+ *                   type: string
+ *                   nullable: true
+ *                 previous:
+ *                   type: string
+ *                   nullable: true
  *                 data:
  *                   type: array
  *                   items:
@@ -127,13 +141,16 @@ const router = express.Router();
  *                 example: '0771234567'
  *               province:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *               district:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109cb
+ *                 example: COL
+ *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109cc
+ *                 example: CF
+ *                 description: Station code (e.g. CF)
  *     responses:
  *       201:
  *         description: TukTuk created successfully
@@ -153,23 +170,26 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
+  .head(protect, getTukTuks)
   .get(protect, getTukTuks)
   .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateTukTuk, createTukTuk);
 
 /**
  * @swagger
- * /api/v1/tuktuks/{id}:
+ * /api/v1/tuktuks/{registrationNumber}:
  *   get:
- *     summary: Get a standard tuktuk
+ *     summary: Get a single tuktuk by registration number
  *     tags: [TukTuks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
+ *         description: Vehicle registration number
  *     responses:
  *       200:
  *         description: TukTuk details
@@ -181,6 +201,8 @@ router.route('/')
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -192,16 +214,45 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
+ *         description: Vehicle registration number
  *     requestBody:
  *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               registrationNumber:
+ *                 type: string
+ *                 example: WP-0001
+ *               deviceId:
+ *                 type: string
+ *               driverName:
+ *                 type: string
+ *               driverNIC:
+ *                 type: string
+ *               driverContact:
+ *                 type: string
+ *               province:
+ *                 type: string
+ *                 example: WP
+ *                 description: Province code
+ *               district:
+ *                 type: string
+ *                 example: COL
+ *                 description: District code
+ *               station:
+ *                 type: string
+ *                 example: CF
+ *                 description: Station code
+ *               isActive:
+ *                 type: boolean
+ *                 description: HQ_ADMIN only
  *     responses:
  *       200:
  *         description: TukTuk updated successfully
@@ -228,10 +279,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
+ *         description: Vehicle registration number
  *     responses:
  *       204:
  *         description: TukTuk deleted — no content returned
@@ -246,7 +299,8 @@ router.route('/')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.route('/:id')
+router.route('/:registrationNumber')
+  .head(protect, getTukTuk)
   .get(protect, getTukTuk)
   .patch(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateTukTukUpdate, updateTukTuk)
   .delete(protect, authorize('HQ_ADMIN'), deleteTukTuk);
@@ -254,7 +308,7 @@ router.route('/:id')
 
 /**
  * @swagger
- * /api/v1/tuktuks/{id}/ping:
+ * /api/v1/tuktuks/{registrationNumber}/ping:
  *   post:
  *     summary: Post a location ping from a device
  *     tags: [Location]
@@ -262,10 +316,12 @@ router.route('/:id')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
+ *         description: Vehicle registration number
  *     requestBody:
  *       required: true
  *       content:
@@ -299,11 +355,11 @@ router.route('/:id')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
+router.post('/:registrationNumber/ping', protect, authorize('DEVICE'), validatePing, postPing);
 
 /**
  * @swagger
- * /api/v1/tuktuks/{id}/location:
+ * /api/v1/tuktuks/{registrationNumber}/location:
  *   get:
  *     summary: Get last known location of a tuktuk
  *     tags: [Location]
@@ -311,10 +367,11 @@ router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
  *     responses:
  *       200:
  *         description: Last known location
@@ -329,16 +386,18 @@ router.post('/:id/ping', protect, authorize('DEVICE'), validatePing, postPing);
  *                   $ref: '#/components/schemas/LocationPing'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id/location', protect, getLastLocation);
+router.get('/:registrationNumber/location', protect, getLastLocation);
 
 /**
  * @swagger
- * /api/v1/tuktuks/{id}/history:
+ * /api/v1/tuktuks/{registrationNumber}/history:
  *   get:
  *     summary: Get location history of a tuktuk
  *     tags: [Location]
@@ -346,10 +405,11 @@ router.get('/:id/location', protect, getLastLocation);
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
  *       - in: query
  *         name: from
  *         schema:
@@ -370,6 +430,16 @@ router.get('/:id/location', protect, getLastLocation);
  *         schema:
  *           type: integer
  *           default: 100
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *           example: latitude,longitude,timestamp
+ *         description: >-
+ *           Comma-separated list of fields to include in each ping object.
+ *           Allowed: latitude, longitude, speed, heading, timestamp,
+ *           batteryLevel, signalStrength, isEngineOn, passengerCount.
+ *           Omit to receive all fields.
  *     responses:
  *       200:
  *         description: Paginated location history
@@ -380,24 +450,34 @@ router.get('/:id/location', protect, getLastLocation);
  *               properties:
  *                 page:
  *                   type: integer
+ *                 limit:
+ *                   type: integer
  *                 total:
  *                   type: integer
+ *                 next:
+ *                   type: string
+ *                   nullable: true
+ *                 previous:
+ *                   type: string
+ *                   nullable: true
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/LocationPing'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id/history', protect, getLocationHistory);
+router.get('/:registrationNumber/history', protect, getLocationHistory);
 
 /**
  * @swagger
- * /api/v1/tuktuks/{id}/summary:
+ * /api/v1/tuktuks/{registrationNumber}/summary:
  *   get:
  *     summary: Get movement summary for a tuktuk (distance, duration, speed stats)
  *     tags: [TukTuks]
@@ -405,10 +485,11 @@ router.get('/:id/history', protect, getLocationHistory);
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: registrationNumber
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP-0001
  *       - in: query
  *         name: from
  *         schema:
@@ -424,15 +505,43 @@ router.get('/:id/history', protect, getLocationHistory);
  *     responses:
  *       200:
  *         description: Movement summary with distance, speed and duration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tukTuk:
+ *                   $ref: '#/components/schemas/TukTuk'
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalPings:
+ *                       type: integer
+ *                     firstSeen:
+ *                       type: string
+ *                       format: date-time
+ *                     lastSeen:
+ *                       type: string
+ *                       format: date-time
+ *                     durationHours:
+ *                       type: number
+ *                     approximateDistanceKm:
+ *                       type: number
+ *                     averageSpeedKmph:
+ *                       type: number
+ *                     maxSpeedKmph:
+ *                       type: number
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id/summary', protect, getTukTukSummary);
+router.get('/:registrationNumber/summary', protect, getTukTukSummary);
 
 export default router;

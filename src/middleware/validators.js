@@ -16,6 +16,7 @@ export const validateRegister = [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   body('role').optional().isIn(['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE']).withMessage('Invalid role'),
+  body('registrationNumber').optional().notEmpty().withMessage('Registration number cannot be empty'),
   validateRequest
 ];
 
@@ -47,7 +48,7 @@ export const validateProvinceUpdate = [
 export const validateDistrict = [
   body('name').notEmpty().withMessage('District name is required'),
   body('code').notEmpty().withMessage('District code is required'),
-  body('province').notEmpty().isMongoId().withMessage('Valid province ID is required'),
+  body('province').notEmpty().withMessage('Province code is required'),
   validateRequest
 ];
 
@@ -55,7 +56,7 @@ export const validateDistrict = [
 export const validateDistrictUpdate = [
   body('name').optional().notEmpty().withMessage('District name cannot be empty'),
   body('code').optional().notEmpty().withMessage('District code cannot be empty'),
-  body('province').optional().isMongoId().withMessage('Valid province ID is required'),
+  body('province').optional().notEmpty().withMessage('Province code cannot be empty'),
   validateRequest
 ];
 
@@ -65,8 +66,8 @@ export const validateDistrictUpdate = [
 export const validateStation = [
   body('name').notEmpty().withMessage('Station name is required'),
   body('code').notEmpty().withMessage('Station code is required'),
-  body('district').notEmpty().isMongoId().withMessage('Valid district ID is required'),
-  body('province').notEmpty().isMongoId().withMessage('Valid province ID is required'),
+  body('district').notEmpty().withMessage('District code is required'),
+  body('province').notEmpty().withMessage('Province code is required'),
   validateRequest
 ];
 
@@ -74,8 +75,8 @@ export const validateStation = [
 export const validateStationUpdate = [
   body('name').optional().notEmpty().withMessage('Station name cannot be empty'),
   body('code').optional().notEmpty().withMessage('Station code cannot be empty'),
-  body('district').optional().isMongoId().withMessage('Valid district ID is required'),
-  body('province').optional().isMongoId().withMessage('Valid province ID is required'),
+  body('district').optional().notEmpty().withMessage('District code cannot be empty'),
+  body('province').optional().notEmpty().withMessage('Province code cannot be empty'),
   validateRequest
 ];
 
@@ -87,9 +88,9 @@ export const validateTukTuk = [
   body('deviceId').notEmpty().withMessage('Device ID is required'),
   body('driverName').notEmpty().withMessage('Driver name is required'),
   body('driverNIC').notEmpty().withMessage('Driver NIC is required'),
-  body('province').notEmpty().isMongoId().withMessage('Valid province ID is required'),
-  body('district').notEmpty().isMongoId().withMessage('Valid district ID is required'),
-  body('station').notEmpty().isMongoId().withMessage('Valid station ID is required'),
+  body('province').notEmpty().withMessage('Province code is required'),
+  body('district').notEmpty().withMessage('District code is required'),
+  body('station').notEmpty().withMessage('Station code is required'),
   validateRequest
 ];
 
@@ -99,9 +100,9 @@ export const validateTukTukUpdate = [
   body('deviceId').optional().notEmpty().withMessage('Device ID cannot be empty'),
   body('driverName').optional().notEmpty().withMessage('Driver name cannot be empty'),
   body('driverNIC').optional().notEmpty().withMessage('Driver NIC cannot be empty'),
-  body('province').optional().isMongoId().withMessage('Valid province ID required'),
-  body('district').optional().isMongoId().withMessage('Valid district ID required'),
-  body('station').optional().isMongoId().withMessage('Valid station ID required'),
+  body('province').optional().notEmpty().withMessage('Province code cannot be empty'),
+  body('district').optional().notEmpty().withMessage('District code cannot be empty'),
+  body('station').optional().notEmpty().withMessage('Station code cannot be empty'),
   validateRequest
 ];
 

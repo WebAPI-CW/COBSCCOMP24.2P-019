@@ -42,13 +42,13 @@ export const getUserById = async (id) => {
  * Create a new user.
  * Throws APIError 409 if email already exists.
  */
-export const createUser = async ({ name, email, password, role, province, district, station }) => {
+export const createUser = async ({ name, email, password, role, province, district, station, registrationNumber }) => {
   const userExists = await User.findOne({ email });
   if (userExists) {
     throw new APIError(409, 'Conflict', 'User already exists');
   }
 
-  const user = await User.create({ name, email, password, role, province, district, station });
+  const user = await User.create({ name, email, password, role, province, district, station, registrationNumber });
   const userObj = user.toObject();
   delete userObj.password;
   return userObj;
@@ -60,8 +60,8 @@ export const createUser = async ({ name, email, password, role, province, distri
  * Throws APIError 404 if not found.
  */
 export const updateUser = async (id, body) => {
-  const { name, email, role, province, district, station, isActive } = body;
-  
+  const { name, email, role, province, district, station, isActive, registrationNumber } = body;
+
   const current = await User.findById(id);
   if (!current) {
     throw new APIError(404, 'Not Found', 'User not found');
@@ -78,10 +78,11 @@ export const updateUser = async (id, body) => {
   if (province !== undefined) updates.province = province;
   if (district !== undefined) updates.district = district;
   if (station  !== undefined) updates.station  = station;
+  if (registrationNumber !== undefined) updates.registrationNumber = registrationNumber;
   if (isActive !== undefined) updates.isActive = isActive;
 
   const user = await User.findByIdAndUpdate(id, updates, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   }).select('-password -__v');
 
@@ -91,3 +92,18 @@ export const updateUser = async (id, body) => {
   return user;
 };
 
+/**
+ * Return a single user by email address.
+ * Throws APIError 404 if not found.
+ */
+export const getUserByEmail = async (email) => {
+  const user = await User.findOne({ email: email.toLowerCase() })
+    .select('-password -__v')
+    .populate('province', 'name code')
+    .populate('district', 'name code')
+    .populate('station',  'name code');
+  if (!user) {
+    throw new APIError(404, 'Not Found', 'User not found');
+  }
+  return user;
+};

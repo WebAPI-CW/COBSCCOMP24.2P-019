@@ -27,12 +27,26 @@ const router = express.Router();
  *         name: province
  *         schema:
  *           type: string
- *         description: Filter by province ID
+ *           example: WP
+ *         description: Filter by province code
  *       - in: query
  *         name: district
  *         schema:
  *           type: string
- *         description: Filter by district ID
+ *           example: COL
+ *         description: Filter by district code
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *           example: ST001
+ *         description: Filter by station code (partial, case-insensitive)
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *           example: Colombo Fort
+ *         description: Filter by station name (partial, case-insensitive)
  *       - in: query
  *         name: page
  *         schema:
@@ -88,10 +102,12 @@ const router = express.Router();
  *                 example: CF
  *               district:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109cb
+ *                 example: COL
+ *                 description: District code (e.g. COL)
  *               province:
  *                 type: string
- *                 example: 60d0fe4f5311236168a109ca
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *               address:
  *                 type: string
  *               contactNumber:
@@ -115,23 +131,26 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
+  .head(protect, getStations)
   .get(protect, getStations)
   .post(protect, authorize('HQ_ADMIN'), validateStation, createStation);
 
 /**
  * @swagger
- * /api/v1/police-stations/{id}:
+ * /api/v1/police-stations/{code}:
  *   get:
- *     summary: Get a single station by ID
+ *     summary: Get a single station by code
  *     tags: [Police Stations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: CF
+ *         description: Station code (e.g. CF, KOT)
  *     responses:
  *       200:
  *         description: Station details
@@ -143,6 +162,8 @@ router.route('/')
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -154,10 +175,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: CF
+ *         description: Station code (e.g. CF, KOT)
  *     requestBody:
  *       required: true
  *       content:
@@ -167,12 +190,18 @@ router.route('/')
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
+ *                 example: CF
  *               district:
  *                 type: string
+ *                 example: COL
+ *                 description: District code (e.g. COL)
  *               province:
  *                 type: string
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *               address:
  *                 type: string
  *               contactNumber:
@@ -203,10 +232,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: CF
+ *         description: Station code (e.g. CF, KOT)
  *     responses:
  *       204:
  *         description: Station deleted — no content returned
@@ -221,7 +252,8 @@ router.route('/')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.route('/:id')
+router.route('/:code')
+  .head(protect, getStation)
   .get(protect, getStation)
   .patch(protect, authorize('HQ_ADMIN'), validateStationUpdate, updateStation)
   .delete(protect, authorize('HQ_ADMIN'), deleteStation);

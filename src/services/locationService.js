@@ -2,6 +2,7 @@ import LocationPing from '../models/LocationPing.js';
 import TukTuk from '../models/TukTuk.js';
 import { APIError } from '../utils/apiError.js';
 import { getPaginationData } from '../utils/paginationHelper.js';
+import { parseSLT } from '../utils/dateHelper.js';
 
 export const recordPing = async (tukTukId, { latitude, longitude, speed, heading }) => {
   const tukTuk = await TukTuk.findById(tukTukId);
@@ -22,14 +23,26 @@ export const getLastLocation = async (tukTukId) => {
 export const getLocationHistory = async (tukTukId, query) => {
   const tukTuk = await TukTuk.findById(tukTukId);
   if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
-  const { from, to } = query;
+  const { from, to, fields } = query;
   const filter = { tukTuk: tukTukId };
   if (from || to) {
     filter.timestamp = {};
-    if (from) filter.timestamp.$gte = new Date(from);
-    if (to)   filter.timestamp.$lte = new Date(to);
+    if (from) filter.timestamp.$gte = parseSLT(from);
+    if (to)   filter.timestamp.$lte = parseSLT(to);
   }
-  const paginatedData = await getPaginationData(LocationPing, query, filter, null, 100, { timestamp: -1 });
+
+  // Build field projection from ?fields=lat,lng,timestamp (whitelist only)
+  const ALLOWED_FIELDS = ['latitude', 'longitude', 'speed', 'heading', 'timestamp',
+    'batteryLevel', 'signalStrength', 'isEngineOn', 'passengerCount'];
+  let projection = null;
+  if (fields) {
+    const requested = fields.split(',').map(f => f.trim()).filter(f => ALLOWED_FIELDS.includes(f));
+    if (requested.length > 0) {
+      projection = requested.join(' ');
+    }
+  }
+
+  const paginatedData = await getPaginationData(LocationPing, query, filter, null, 100, { timestamp: -1 }, projection);
   return { tukTuk, ...paginatedData };
 };
 
@@ -106,7 +119,7 @@ export const getAllLocationHistory = async (tukTukFilter, query) => {
   const tukTuks = await TukTuk.find(tukTukFilter).select('_id');
   const filter = {
     tukTuk:   { $in: tukTuks.map(v => v._id) },
-    timestamp: { $gte: new Date(from), $lte: new Date(to) }
+    timestamp: { $gte: parseSLT(from), $lte: parseSLT(to) }
   };
   const paginatedData = await getPaginationData(LocationPing, query, filter, null, 50, { timestamp: -1 });
   return { timeWindow: { from, to }, ...paginatedData };
@@ -120,8 +133,8 @@ export const getTukTukSummary = async (tukTukId, query) => {
   const filter = { tukTuk: tukTukId };
   if (from || to) {
     filter.timestamp = {};
-    if (from) filter.timestamp.$gte = new Date(from);
-    if (to)   filter.timestamp.$lte = new Date(to);
+    if (from) filter.timestamp.$gte = parseSLT(from);
+    if (to)   filter.timestamp.$lte = parseSLT(to);
   }
   const pings = await LocationPing.find(filter).sort({ timestamp: 1 });
   if (pings.length === 0) {
@@ -161,8 +174,8 @@ export const getSpeedAnomalies = async (tukTukFilter, query) => {
   const pingFilter = { tukTuk: { $in: tukTuks.map(v => v._id) }, speed: { $gte: parseFloat(speedThreshold) } };
   if (from || to) {
     pingFilter.timestamp = {};
-    if (from) pingFilter.timestamp.$gte = new Date(from);
-    if (to)   pingFilter.timestamp.$lte = new Date(to);
+    if (from) pingFilter.timestamp.$gte = parseSLT(from);
+    if (to)   pingFilter.timestamp.$lte = parseSLT(to);
   }
   const paginatedData = await getPaginationData(LocationPing, query, pingFilter, null, 50, { speed: -1 });
   const enrichedData = paginatedData.data.map(ping => {
@@ -172,9 +185,10 @@ export const getSpeedAnomalies = async (tukTukFilter, query) => {
   return { speedThreshold: parseFloat(speedThreshold), ...paginatedData, data: enrichedData };
 };
 
-export const getLocationSummary = async () => {
+export const getLocationSummary = async (scopeFilter = {}) => {
+  const matchStage = { isActive: true, ...scopeFilter };
   const summary = await TukTuk.aggregate([
-    { $match: { isActive: true } },
+    { $match: matchStage },
     { $group: { _id: '$province', activeTukTuks: { $sum: 1 } } },
     { $lookup: { from: 'provinces', localField: '_id', foreignField: '_id', as: 'province' } },
     { $unwind: '$province' },

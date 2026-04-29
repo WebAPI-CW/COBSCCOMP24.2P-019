@@ -117,13 +117,13 @@ Full documentation available at `/api-docs` (Swagger UI).
 | Tag | Endpoints |
 |---|---|
 | Auth | POST /api/v1/auth/login, GET /api/v1/auth/me |
-| Provinces | GET, POST /api/v1/provinces — GET, PATCH, DELETE /api/v1/provinces/:id |
-| Districts | GET, POST /api/v1/districts — GET, PATCH, DELETE /api/v1/districts/:id |
-| Users | GET, POST /api/v1/users — GET, PATCH /api/v1/users/:id |
-| Police Stations | GET, POST /api/v1/police-stations — GET, PATCH, DELETE /api/v1/police-stations/:id |
-| TukTuks | GET, POST /api/v1/tuktuks — GET, PATCH, DELETE /api/v1/tuktuks/:id |
-| Location | POST /api/v1/tuktuks/:id/ping, GET /api/v1/tuktuks/:id/location |
-| Location | GET /api/v1/tuktuks/:id/history, GET /api/v1/tuktuks/:id/summary |
+| Provinces | GET, POST /api/v1/provinces — GET, PATCH, DELETE /api/v1/provinces/:code |
+| Districts | GET, POST /api/v1/districts — GET, PATCH, DELETE /api/v1/districts/:code |
+| Users | GET, POST /api/v1/users — GET, PATCH /api/v1/users/:email |
+| Police Stations | GET, POST /api/v1/police-stations — GET, PATCH, DELETE /api/v1/police-stations/:code |
+| TukTuks | GET, POST /api/v1/tuktuks — GET, PATCH, DELETE /api/v1/tuktuks/:registrationNumber |
+| Location | POST /api/v1/tuktuks/:registrationNumber/ping, GET /api/v1/tuktuks/:registrationNumber/location |
+| Location | GET /api/v1/tuktuks/:registrationNumber/history, GET /api/v1/tuktuks/:registrationNumber/summary |
 | Location | GET /api/v1/locations/live, GET /api/v1/locations/inactive |
 | Location | GET /api/v1/locations/history, GET /api/v1/locations/anomalies |
 | Location | GET /api/v1/locations/summary |
@@ -193,4 +193,4 @@ Maturity Model Level 2:
   to a standard CRUD method.
 - **URI versioning** — All routes are prefixed with `/api/v1/`.
 - **Error format** — All error responses include `code`, `message`,
-  `description`, and `moreInfo` fields per WSO2 Section 8.
+  `description`, and `moreInfo` fields per WSO2 Section 8.

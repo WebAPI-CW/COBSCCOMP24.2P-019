@@ -6,8 +6,8 @@ import { getPaginationData } from '../utils/paginationHelper.js';
 /**
  * Return paginated list of provinces.
  */
-export const getAllProvinces = async (query) => {
-  return getPaginationData(Province, query);
+export const getAllProvinces = async (filter, query) => {
+  return getPaginationData(Province, query, filter);
 };
 
 /**
@@ -39,7 +39,7 @@ export const updateProvince = async (id, { name, code }) => {
   if (code !== undefined) updates.code = code;
 
   const province = await Province.findByIdAndUpdate(id, updates, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   });
   if (!province) {
@@ -62,4 +62,25 @@ export const deleteProvince = async (id) => {
   if (!province) {
     throw new APIError(404, 'Not Found', 'Province not found');
   }
+};
+
+/**
+ * Return a single province by its code (e.g. 'WP', 'CP').
+ * Throws APIError 404 if not found.
+ */
+export const getProvinceByCode = async (code) => {
+  const province = await Province.findOne({ code: code.toUpperCase() });
+  if (!province) {
+    throw new APIError(404, 'Not Found', `Province with code '${code.toUpperCase()}' not found`);
+  }
+  return province;
+};
+
+/**
+ * Resolve a province code to an ObjectId filter object.
+ * Used by child-resource controllers to filter by province code.
+ */
+export const resolveProvinceFilter = async (code) => {
+  const province = await getProvinceByCode(code);
+  return { province: province._id };
 };

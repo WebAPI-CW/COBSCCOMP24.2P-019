@@ -21,7 +21,7 @@ describe('ProvinceService — getAllProvinces', () => {
     await createProvince({ name: 'Western Province', code: 'WP' });
     await createProvince({ name: 'Central Province', code: 'CP' });
 
-    const result = await getAllProvinces({ page: 1, limit: 10 });
+    const result = await getAllProvinces({}, { page: 1, limit: 10 });
     expect(result.total).toBe(2);
     expect(result.data).toHaveLength(2);
     expect(result.page).toBe(1);
@@ -32,7 +32,7 @@ describe('ProvinceService — getAllProvinces', () => {
     await createProvince({ name: 'Central Province', code: 'CP' });
     await createProvince({ name: 'Southern Province', code: 'SP' });
 
-    const result = await getAllProvinces({ page: 1, limit: 2 });
+    const result = await getAllProvinces({}, { page: 1, limit: 2 });
     expect(result.data).toHaveLength(2);
     expect(result.total).toBe(3);
     expect(result.next).not.toBeNull();

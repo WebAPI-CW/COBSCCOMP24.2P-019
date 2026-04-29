@@ -33,6 +33,12 @@ const router = express.Router();
  *           type: boolean
  *         description: Filter by active status
  *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *           example: officer@slpolice.lk
+ *         description: Filter by email (partial, case-insensitive)
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
@@ -52,8 +58,16 @@ const router = express.Router();
  *               properties:
  *                 page:
  *                   type: integer
+ *                 limit:
+ *                   type: integer
  *                 total:
  *                   type: integer
+ *                 next:
+ *                   type: string
+ *                   nullable: true
+ *                 previous:
+ *                   type: string
+ *                   nullable: true
  *                 data:
  *                   type: array
  *                   items:
@@ -92,10 +106,20 @@ const router = express.Router();
  *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
  *               province:
  *                 type: string
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *               district:
  *                 type: string
+ *                 example: COL
+ *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
+ *                 example: CF
+ *                 description: Station code (e.g. CF)
+ *               registrationNumber:
+ *                 type: string
+ *                 example: WP-0001
+ *                 description: Linked tuk-tuk registration number (DEVICE role only)
  *     responses:
  *       201:
  *         description: User created successfully
@@ -115,23 +139,26 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
+  .head(protect, authorize('HQ_ADMIN'), getUsers)
   .get(protect, authorize('HQ_ADMIN'), getUsers)
   .post(protect, authorize('HQ_ADMIN'), validateRegister, createUser);
 
 /**
  * @swagger
- * /api/v1/users/{id}:
+ * /api/v1/users/{email}:
  *   get:
- *     summary: Get a single user by ID
+ *     summary: Get a single user by email
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: email
  *         required: true
  *         schema:
  *           type: string
+ *           example: officer@slpolice.lk
+ *         description: User email address (URL-encode the @ sign as %40)
  *     responses:
  *       200:
  *         description: User details (password excluded)
@@ -156,10 +183,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: email
  *         required: true
  *         schema:
  *           type: string
+ *           example: officer@slpolice.lk
+ *         description: User email address (URL-encode the @ sign as %40)
  *     requestBody:
  *       required: false
  *       content:
@@ -176,10 +205,23 @@ router.route('/')
  *                 enum: [HQ_ADMIN, PROVINCIAL, STATION, DEVICE]
  *               province:
  *                 type: string
+ *                 example: WP
+ *                 description: Province code (e.g. WP)
  *               district:
  *                 type: string
+ *                 example: COL
+ *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
+ *                 example: CF
+ *                 description: Station code (e.g. CF)
+ *               registrationNumber:
+ *                 type: string
+ *                 example: WP-0001
+ *                 description: Linked tuk-tuk registration number (DEVICE role only)
+ *               isActive:
+ *                 type: boolean
+ *                 description: Activate or deactivate the user account
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -200,7 +242,8 @@ router.route('/')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.route('/:id')
+router.route('/:email')
+  .head(protect, authorize('HQ_ADMIN'), getUser)
   .get(protect, authorize('HQ_ADMIN'), getUser)
   .patch(protect, authorize('HQ_ADMIN'), updateUser);
 

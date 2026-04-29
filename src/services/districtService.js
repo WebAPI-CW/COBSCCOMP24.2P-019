@@ -45,7 +45,7 @@ export const updateDistrict = async (id, { name, code, province }) => {
   if (province !== undefined) updates.province = province;
 
   const district = await District.findByIdAndUpdate(id, updates, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   });
   if (!district) {
@@ -68,4 +68,25 @@ export const deleteDistrict = async (id) => {
   if (!district) {
     throw new APIError(404, 'Not Found', 'District not found');
   }
+};
+
+/**
+ * Return a single district by its code (e.g. 'COL', 'GAM').
+ * Throws APIError 404 if not found.
+ */
+export const getDistrictByCode = async (code) => {
+  const district = await District.findOne({ code: code.toUpperCase() })
+    .populate('province', 'name code');
+  if (!district) {
+    throw new APIError(404, 'Not Found', `District with code '${code.toUpperCase()}' not found`);
+  }
+  return district;
+};
+
+/**
+ * Resolve a district code to an ObjectId filter object.
+ */
+export const resolveDistrictFilter = async (code) => {
+  const district = await getDistrictByCode(code);
+  return { district: district._id };
 };

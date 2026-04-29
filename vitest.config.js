@@ -8,8 +8,8 @@ export default defineConfig({
     testTimeout: 30000,
     // Run test files sequentially to avoid DB conflicts
     pool: 'forks',
-    poolOptions: {
-      forks: { singleFork: true }
+    forkOptions: {
+      singleFork: true
     }
   }
 });

@@ -13,7 +13,7 @@ async function getAdminToken() {
 }
 
 async function getDeviceToken() {
-  const user = await createUser({ name: 'Device', email: 'device@veh.com', password: 'Device@1234', role: 'DEVICE' });
+  const user = await createUser({ name: 'Device', email: 'device@veh.com', password: 'Device@1234', role: 'DEVICE', registrationNumber: 'WP-0001' });
   return generateToken(user._id, user.role);
 }
 
@@ -31,7 +31,7 @@ async function seedTukTuk(token, refs) {
     .send({
       registrationNumber: 'WP-0001', deviceId: 'DEV-001', driverName: 'Test Driver',
       driverNIC: '199012345678', driverContact: '0771234567',
-      province: refs.province._id, district: refs.district._id, station: refs.station._id
+      province: refs.province.code, district: refs.district.code, station: refs.station.code
     });
   return res.body;
 }
@@ -46,7 +46,7 @@ describe('POST /api/v1/tuktuks', () => {
       .post('/api/v1/tuktuks').set('Authorization', `Bearer ${token}`)
       .send({ registrationNumber: 'WP-0001', deviceId: 'DEV-001', driverName: 'Test Driver',
         driverNIC: '199012345678', driverContact: '0771234567',
-        province: refs.province._id, district: refs.district._id, station: refs.station._id });
+        province: refs.province.code, district: refs.district.code, station: refs.station.code });
     expect(res.status).toBe(201);
     expect(res.headers.location).toContain('/api/v1/tuktuks/');
     expect(res.body.isActive).toBe(true);
@@ -64,31 +64,30 @@ describe('GET /api/v1/tuktuks', () => {
   });
 });
 
-describe('GET /api/v1/tuktuks/:id', () => {
-  it('should return a single tukTuk by id', async () => {
+describe('GET /api/v1/tuktuks/:registrationNumber', () => {
+  it('should return a single tukTuk by registrationNumber', async () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(res.body._id).toBe(tukTuk._id);
     expect(res.body.registrationNumber).toBe('WP-0001');
   });
 
-  it('should return 400 for invalid ObjectId', async () => {
+  it('should return 404 for unknown registration number', async () => {
     const token = await getAdminToken();
-    const res = await request(app).get('/api/v1/tuktuks/not-valid').set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(400);
+    const res = await request(app).get('/api/v1/tuktuks/UNKNOWN-9999').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
   });
 });
 
-describe('PATCH /api/v1/tuktuks/:id', () => {
+describe('PATCH /api/v1/tuktuks/:registrationNumber', () => {
   it('should update driverName and return 200', async () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
     const res = await request(app)
-      .patch(`/api/v1/tuktuks/${tukTuk._id}`)
+      .patch(`/api/v1/tuktuks/${tukTuk.registrationNumber}`)
       .set('Authorization', `Bearer ${token}`)
       .send({ driverName: 'Updated Driver' });
     expect(res.status).toBe(200);
@@ -96,35 +95,35 @@ describe('PATCH /api/v1/tuktuks/:id', () => {
   });
 });
 
-describe('PATCH /api/v1/tuktuks/:id (deactivate)', () => {
+describe('PATCH /api/v1/tuktuks/:registrationNumber (deactivate)', () => {
   it('should set isActive to false', async () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    const res = await request(app).patch(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
+    const res = await request(app).patch(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
     expect(res.status).toBe(200);
     expect(res.body.isActive).toBe(false);
   });
 });
 
-describe('PATCH /api/v1/tuktuks/:id (activate)', () => {
+describe('PATCH /api/v1/tuktuks/:registrationNumber (activate)', () => {
   it('should reactivate a deactivated tukTuk', async () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    await request(app).patch(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
-    const res = await request(app).patch(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`).send({ isActive: true });
+    await request(app).patch(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`).send({ isActive: false });
+    const res = await request(app).patch(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`).send({ isActive: true });
     expect(res.status).toBe(200);
     expect(res.body.isActive).toBe(true);
   });
 });
 
-describe('DELETE /api/v1/tuktuks/:id', () => {
+describe('DELETE /api/v1/tuktuks/:registrationNumber', () => {
   it('should return 204 on successful delete', async () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    const res = await request(app).delete(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`);
+    const res = await request(app).delete(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(204);
   });
 
@@ -132,21 +131,21 @@ describe('DELETE /api/v1/tuktuks/:id', () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    await request(app).delete(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`);
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}`).set('Authorization', `Bearer ${token}`);
+    await request(app).delete(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
   });
 });
 
 // ── Location Endpoints ──────────────────────────────────────────────────────
 
-describe('POST /api/v1/tuktuks/:id/ping', () => {
+describe('POST /api/v1/tuktuks/:registrationNumber/ping', () => {
   it('should record a ping and return 201', async () => {
     const adminToken  = await getAdminToken();
     const deviceToken = await getDeviceToken();
     const refs        = await seedRefs();
     const tukTuk     = await seedTukTuk(adminToken, refs);
-    const res = await request(app).post(`/api/v1/tuktuks/${tukTuk._id}/ping`)
+    const res = await request(app).post(`/api/v1/tuktuks/${tukTuk.registrationNumber}/ping`)
       .set('Authorization', `Bearer ${deviceToken}`)
       .send({ latitude: 6.9271, longitude: 79.8612, speed: 30, heading: 90 });
     expect(res.status).toBe(201);
@@ -158,23 +157,23 @@ describe('POST /api/v1/tuktuks/:id/ping', () => {
     const deviceToken = await getDeviceToken();
     const refs        = await seedRefs();
     const tukTuk     = await seedTukTuk(adminToken, refs);
-    const res = await request(app).post(`/api/v1/tuktuks/${tukTuk._id}/ping`)
+    const res = await request(app).post(`/api/v1/tuktuks/${tukTuk.registrationNumber}/ping`)
       .set('Authorization', `Bearer ${deviceToken}`)
       .send({ latitude: 99.0, longitude: 79.8612 });
     expect(res.status).toBe(400);
   });
 });
 
-describe('GET /api/v1/tuktuks/:id/location', () => {
+describe('GET /api/v1/tuktuks/:registrationNumber/location', () => {
   it('should return last known location after a ping', async () => {
     const adminToken  = await getAdminToken();
     const deviceToken = await getDeviceToken();
     const refs        = await seedRefs();
     const tukTuk     = await seedTukTuk(adminToken, refs);
-    await request(app).post(`/api/v1/tuktuks/${tukTuk._id}/ping`)
+    await request(app).post(`/api/v1/tuktuks/${tukTuk.registrationNumber}/ping`)
       .set('Authorization', `Bearer ${deviceToken}`)
       .send({ latitude: 6.9271, longitude: 79.8612, speed: 30 });
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}/location`).set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}/location`).set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('lastLocation');
     expect(res.body.lastLocation.latitude).toBe(6.9271);
@@ -184,21 +183,21 @@ describe('GET /api/v1/tuktuks/:id/location', () => {
     const token   = await getAdminToken();
     const refs    = await seedRefs();
     const tukTuk = await seedTukTuk(token, refs);
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}/location`).set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}/location`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
   });
 });
 
-describe('GET /api/v1/tuktuks/:id/history', () => {
+describe('GET /api/v1/tuktuks/:registrationNumber/history', () => {
   it('should return paginated location history', async () => {
     const adminToken  = await getAdminToken();
     const deviceToken = await getDeviceToken();
     const refs        = await seedRefs();
     const tukTuk     = await seedTukTuk(adminToken, refs);
-    await request(app).post(`/api/v1/tuktuks/${tukTuk._id}/ping`)
+    await request(app).post(`/api/v1/tuktuks/${tukTuk.registrationNumber}/ping`)
       .set('Authorization', `Bearer ${deviceToken}`)
       .send({ latitude: 6.9271, longitude: 79.8612, speed: 30 });
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}/history`).set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}/history`).set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('total');
     expect(res.body).toHaveProperty('data');
@@ -206,16 +205,16 @@ describe('GET /api/v1/tuktuks/:id/history', () => {
   });
 });
 
-describe('GET /api/v1/tuktuks/:id/summary', () => {
+describe('GET /api/v1/tuktuks/:registrationNumber/summary', () => {
   it('should return a summary with totalPings after a ping', async () => {
     const adminToken  = await getAdminToken();
     const deviceToken = await getDeviceToken();
     const refs        = await seedRefs();
     const tukTuk     = await seedTukTuk(adminToken, refs);
-    await request(app).post(`/api/v1/tuktuks/${tukTuk._id}/ping`)
+    await request(app).post(`/api/v1/tuktuks/${tukTuk.registrationNumber}/ping`)
       .set('Authorization', `Bearer ${deviceToken}`)
       .send({ latitude: 6.9271, longitude: 79.8612, speed: 30 });
-    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk._id}/summary`).set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).get(`/api/v1/tuktuks/${tukTuk.registrationNumber}/summary`).set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('summary');
     expect(res.body.summary.totalPings).toBeGreaterThanOrEqual(1);

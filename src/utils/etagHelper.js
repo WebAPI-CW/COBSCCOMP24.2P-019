@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { APIError } from './apiError.js';
+import { sltReplacer } from './dateHelper.js';
 
 /**
  * Validates the If-Match header for Conditional PUT operations.
@@ -12,10 +13,11 @@ export const validateIfMatch = (req, currentDoc) => {
   const ifMatch = req.headers['if-match'];
   if (!ifMatch) return; // If-Match is optional unless strictly enforced by business logic
 
-  // Stringify the document exactly as res.json() would
+  // Stringify using the same sltReplacer that res.json() applies, so the hash
+  // matches the ETag the client received from the prior GET response.
   const hash = crypto
     .createHash('md5')
-    .update(JSON.stringify(currentDoc))
+    .update(JSON.stringify(currentDoc, sltReplacer))
     .digest('hex');
   
   const expectedEtag = `"${hash}"`;

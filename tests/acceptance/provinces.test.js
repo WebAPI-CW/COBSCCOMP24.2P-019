@@ -18,7 +18,6 @@ describe('GET /api/v1/provinces', () => {
   it('should return 200 with paginated data', async () => {
     const token = await getAdminToken();
     const res = await request(app).get('/api/v1/provinces').set('Authorization', `Bearer ${token}`);
-
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('total');
     expect(res.body).toHaveProperty('data');
@@ -38,7 +37,6 @@ describe('POST /api/v1/provinces', () => {
       .post('/api/v1/provinces')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Western Province', code: 'WP' });
-
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Western Province');
     expect(res.headers.location).toContain('/api/v1/provinces/');
@@ -49,8 +47,7 @@ describe('POST /api/v1/provinces', () => {
     const res = await request(app)
       .post('/api/v1/provinces')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'No Code Province' }); // missing code
-
+      .send({ name: 'No Code Province' });
     expect(res.status).toBe(400);
   });
 
@@ -60,75 +57,51 @@ describe('POST /api/v1/provinces', () => {
       .post('/api/v1/provinces')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Western Province', code: 'WP' });
-
     expect(res.status).toBe(403);
   });
 });
 
-describe('GET /api/v1/provinces/:id', () => {
-  it('should return a single province by id', async () => {
+describe('GET /api/v1/provinces/:code', () => {
+  it('should return a single province by code', async () => {
     const token = await getAdminToken();
-    const created = await request(app).post('/api/v1/provinces').set('Authorization', `Bearer ${token}`).send({ name: 'Single Test Province', code: 'STP' });
-    const res = await request(app).get(`/api/v1/provinces/${created.body._id}`).set('Authorization', `Bearer ${token}`);
+    await request(app).post('/api/v1/provinces').set('Authorization', `Bearer ${token}`).send({ name: 'Single Test Province', code: 'STP' });
+    const res = await request(app).get('/api/v1/provinces/STP').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Single Test Province');
   });
 
-  it('should return 400 for invalid ObjectId', async () => {
+  it('should return 404 for unknown province code', async () => {
     const token = await getAdminToken();
-    const res = await request(app).get('/api/v1/provinces/not-valid').set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(400);
+    const res = await request(app).get('/api/v1/provinces/UNKNOWN').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
   });
 });
 
-describe('PATCH /api/v1/provinces/:id', () => {
+describe('PATCH /api/v1/provinces/:code', () => {
   it('should allow partial update (only name, not code)', async () => {
     const token = await getAdminToken();
-
-    // Create
-    const createRes = await request(app)
-      .post('/api/v1/provinces')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Western Province', code: 'WP' });
-
-    const id = createRes.body._id;
-
-    // Partial update — only name
+    await request(app).post('/api/v1/provinces').set('Authorization', `Bearer ${token}`).send({ name: 'Western Province', code: 'WP' });
     const updateRes = await request(app)
-      .patch(`/api/v1/provinces/${id}`)
+      .patch('/api/v1/provinces/WP')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Updated Western' });
-
     expect(updateRes.status).toBe(200);
     expect(updateRes.body.name).toBe('Updated Western');
-    expect(updateRes.body.code).toBe('WP'); // code unchanged
+    expect(updateRes.body.code).toBe('WP');
   });
 });
 
-describe('DELETE /api/v1/provinces/:id', () => {
+describe('DELETE /api/v1/provinces/:code', () => {
   it('should return 204 after successful delete', async () => {
     const token = await getAdminToken();
-
-    const createRes = await request(app)
-      .post('/api/v1/provinces')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Delete Me', code: 'DM' });
-
-    const id = createRes.body._id;
-
-    const deleteRes = await request(app)
-      .delete(`/api/v1/provinces/${id}`)
-      .set('Authorization', `Bearer ${token}`);
-
+    await request(app).post('/api/v1/provinces').set('Authorization', `Bearer ${token}`).send({ name: 'Delete Me', code: 'DM' });
+    const deleteRes = await request(app).delete('/api/v1/provinces/DM').set('Authorization', `Bearer ${token}`);
     expect(deleteRes.status).toBe(204);
   });
 
-  it('should return 400 for invalid ObjectId format', async () => {
+  it('should return 404 for unknown province code', async () => {
     const token = await getAdminToken();
-    const res = await request(app)
-      .delete('/api/v1/provinces/not-a-valid-id')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(400);
+    const res = await request(app).delete('/api/v1/provinces/NOTEXIST').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
   });
 });

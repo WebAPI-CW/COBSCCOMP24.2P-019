@@ -89,21 +89,21 @@ const detectAnomaly = (ping, ts, sltHour) => {
   // NIGHT_MOVE — moving during dead night (00:00-05:00 SLT)
   if (isNight && ping.speed > 5) return 'NIGHT_MOVE';
 
-  // BREAKDOWN — engine off during active daytime hours
+  // BREAKDOWN — engine off during active daytime hours, only for breakdown-prone tuktuks
   if (isDay && ping.isEngineOn === false && ping.speed === 0) {
-    ts.idleCount = (ts.idleCount || 0) + 1;
-    if (ts.idleCount >= 3) return 'BREAKDOWN';
+    ts.breakdownCount = (ts.breakdownCount || 0) + 1;
+    if (ts.breakdownCount >= 3 && ts.anomalies.isBreakdownProne) return 'BREAKDOWN';
   } else {
-    ts.idleCount = 0;
+    ts.breakdownCount = 0;
   }
 
   // ERRATIC — speed changed by more than 40 km/h from last ping
   if (Math.abs(ping.speed - prevSpeed) > 40) return 'ERRATIC';
 
-  // IDLE_LONG — speed=0 for 3+ consecutive batches during daytime
+  // IDLE_LONG — separate counter, speed=0 for 6+ consecutive batches (3 min) during daytime
   if (isDay && ping.speed === 0) {
     ts.idleCount = (ts.idleCount || 0) + 1;
-    if (ts.idleCount >= 3) return 'IDLE_LONG';
+    if (ts.idleCount >= 6) return 'IDLE_LONG';
   } else if (ping.speed > 0) {
     ts.idleCount = 0;
   }
@@ -140,11 +140,12 @@ const runSimulator = async () => {
         anomalies: assignAnomalies(t.deviceId),
         lat:       last ? last.latitude  : randomBetween(5.9, 9.9),
         lng:       last ? last.longitude : randomBetween(79.7, 81.9),
-        prevLat:   last ? last.latitude  : null,
-        prevLng:   last ? last.longitude : null,
-        prevSpeed: last ? last.speed     : 0,
-        idleCount: 0,
-        state:     {},
+        prevLat:       last ? last.latitude  : null,
+        prevLng:       last ? last.longitude : null,
+        prevSpeed:     last ? last.speed     : 0,
+        idleCount:     0,
+        breakdownCount: 0,
+        state:         {},
       };
     })
   );

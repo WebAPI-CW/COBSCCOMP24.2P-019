@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'TukPatrol API',
       version: '1.0.0',
-      description: 'Real-Time Three-Wheeler Tracking and Movement Logging System for Sri Lanka Law Enforcement'
+      description: 'Real-Time Three-Wheeler Tracking and Movement Logging System for Sri Lanka Law Enforcement.\n\n**Timestamps:** All `createdAt`, `updatedAt`, and `timestamp` fields in responses are in **UTC** (ISO 8601). Sri Lanka Standard Time is UTC+05:30. When supplying `from`/`to` query parameters, naive datetimes (no offset) are automatically interpreted as SLT (UTC+05:30).'
     },
     servers: [
       {
@@ -33,8 +33,8 @@ const options = {
             _id:       { type: 'string' },
             name:      { type: 'string', example: 'Western' },
             code:      { type: 'string', example: 'WP' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' }
+            createdAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         District: {
@@ -44,8 +44,8 @@ const options = {
             name:      { type: 'string', example: 'Colombo' },
             code:      { type: 'string', example: 'COL' },
             province:  { $ref: '#/components/schemas/Province' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' }
+            createdAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         PoliceStation: {
@@ -53,20 +53,29 @@ const options = {
           properties: {
             _id:           { type: 'string' },
             name:          { type: 'string', example: 'Colombo Fort Police Station' },
-            code:          { type: 'string', example: 'ST001' },
+            code:          { type: 'string', example: 'CF' },
             district:      { $ref: '#/components/schemas/District' },
             province:      { $ref: '#/components/schemas/Province' },
             address:       { type: 'string' },
-            contactNumber: { type: 'string' }
+            contactNumber: { type: 'string' },
+            createdAt:     { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt:     { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         User: {
           type: 'object',
           properties: {
-            _id:   { type: 'string' },
-            name:  { type: 'string', example: 'HQ Administrator' },
-            email: { type: 'string', example: 'admin@slpolice.lk' },
-            role:  { type: 'string', enum: ['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE'] }
+            _id:      { type: 'string' },
+            name:     { type: 'string', example: 'HQ Administrator' },
+            email:    { type: 'string', example: 'admin@slpolice.lk' },
+            role:     { type: 'string', enum: ['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE'] },
+            registrationNumber: { type: 'string', example: 'WP-0001', description: 'Linked tuk-tuk registration number (DEVICE role only)' },
+            isActive: { type: 'boolean', example: true },
+            province: { $ref: '#/components/schemas/Province' },
+            district: { $ref: '#/components/schemas/District' },
+            station:  { $ref: '#/components/schemas/PoliceStation' },
+            createdAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt: { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         TukTuk: {
@@ -81,19 +90,27 @@ const options = {
             province:           { $ref: '#/components/schemas/Province' },
             district:           { $ref: '#/components/schemas/District' },
             station:            { $ref: '#/components/schemas/PoliceStation' },
-            isActive:           { type: 'boolean', example: true }
+            isActive:           { type: 'boolean', example: true },
+            createdAt:          { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt:          { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         LocationPing: {
           type: 'object',
           properties: {
-            _id:       { type: 'string' },
-            tukTuk:    { type: 'string' },
-            latitude:  { type: 'number', example: 6.9271 },
-            longitude: { type: 'number', example: 79.8612 },
-            speed:     { type: 'number', example: 35.5 },
-            heading:   { type: 'number', example: 180 },
-            timestamp: { type: 'string', format: 'date-time' }
+            _id:             { type: 'string' },
+            tukTuk:          { type: 'string' },
+            latitude:        { type: 'number', example: 6.9271 },
+            longitude:       { type: 'number', example: 79.8612 },
+            speed:           { type: 'number', example: 35.5 },
+            heading:         { type: 'number', example: 180 },
+            batteryLevel:    { type: 'number', example: 72, description: 'Device battery level (0–100%)' },
+            signalStrength:  { type: 'string', enum: ['strong', 'moderate', 'weak'], example: 'strong', description: 'GPS/cellular signal quality' },
+            isEngineOn:      { type: 'boolean', example: true, description: 'Whether the engine is running at ping time' },
+            passengerCount:  { type: 'integer', example: 2, description: 'Estimated number of passengers' },
+            timestamp:       { type: 'string', format: 'date-time', description: 'UTC timestamp of when the ping was recorded' },
+            createdAt:       { type: 'string', format: 'date-time', description: 'UTC timestamp' },
+            updatedAt:       { type: 'string', format: 'date-time', description: 'UTC timestamp' }
           }
         },
         Error: {
@@ -111,7 +128,7 @@ const options = {
       // Reference in route files as: $ref: '#/components/responses/Unauthorized'
       responses: {
         BadRequest: {
-          description: '400 Bad Request — invalid input, malformed ObjectId, or missing required field',
+          description: '400 Bad Request — invalid input or missing required field',
           content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
         },
         Unauthorized: {

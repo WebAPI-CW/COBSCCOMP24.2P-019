@@ -38,6 +38,7 @@
     "email": "device001@slpolice.lk",
     "password": "$2b$10$83UY39WJP6ODc21OHptskeYTS5C.qegHOgOJ.P3BkK4I3MJWP5ZUO",
     "role": "DEVICE",
+    "registrationNumber": "WP-0001",
     "isActive": true,
     "createdAt": "2026-04-16T10:00:00.000Z",
     "updatedAt": "2026-04-16T10:00:00.000Z",

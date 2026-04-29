@@ -25,6 +25,12 @@ const router = express.Router();
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *           example: WP
+ *         description: Filter by province code (partial, case-insensitive)
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
@@ -94,23 +100,26 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
+  .head(protect, getProvinces)
   .get(protect, getProvinces)
   .post(protect, authorize('HQ_ADMIN'), validateProvince, createProvince);
 
 /**
  * @swagger
- * /api/v1/provinces/{id}:
+ * /api/v1/provinces/{code}:
  *   get:
- *     summary: Get a single province by ID
+ *     summary: Get a single province by code
  *     tags: [Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Province code (e.g. WP, CP, SP)
  *     responses:
  *       200:
  *         description: Province details
@@ -122,6 +131,8 @@ router.route('/')
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -133,10 +144,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Province code (e.g. WP, CP, SP)
  *     requestBody:
  *       required: true
  *       content:
@@ -176,10 +189,12 @@ router.route('/')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
+ *           example: WP
+ *         description: Province code (e.g. WP, CP, SP)
  *     responses:
  *       204:
  *         description: Province deleted — no content returned
@@ -194,14 +209,15 @@ router.route('/')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.route('/:id')
+router.route('/:code')
+  .head(protect, getProvince)
   .get(protect, getProvince)
   .patch(protect, authorize('HQ_ADMIN'), validateProvinceUpdate, updateProvince)
   .delete(protect, authorize('HQ_ADMIN'), deleteProvince);
 
 /**
  * @swagger
- * /api/v1/provinces/{id}/districts:
+ * /api/v1/provinces/{code}/districts:
  *   get:
  *     summary: Get all districts in a province (nested resource)
  *     tags: [Provinces]
@@ -209,11 +225,12 @@ router.route('/:id')
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
- *         description: Province ID
+ *           example: WP
+ *         description: Province code
  *       - in: query
  *         name: page
  *         schema:
@@ -233,6 +250,19 @@ router.route('/:id')
  *     responses:
  *       200:
  *         description: Paginated list of districts in this province
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/District'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       401:
@@ -240,6 +270,6 @@ router.route('/:id')
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id/districts', protect, getDistrictsByProvince);
+router.get('/:code/districts', protect, getDistrictsByProvince);
 
 export default router;

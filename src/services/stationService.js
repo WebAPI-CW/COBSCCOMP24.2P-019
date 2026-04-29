@@ -53,7 +53,7 @@ export const updateStation = async (id, { name, code, district, province, addres
   if (contactNumber !== undefined) updates.contactNumber = contactNumber;
 
   const station = await PoliceStation.findByIdAndUpdate(id, updates, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true
   });
   if (!station) {
@@ -76,4 +76,26 @@ export const deleteStation = async (id) => {
   if (!station) {
     throw new APIError(404, 'Not Found', 'Station not found');
   }
+};
+
+/**
+ * Return a single station by its code (e.g. 'CF', 'KOT').
+ * Throws APIError 404 if not found.
+ */
+export const getStationByCode = async (code) => {
+  const station = await PoliceStation.findOne({ code: code.toUpperCase() })
+    .populate('province', 'name code')
+    .populate('district', 'name code');
+  if (!station) {
+    throw new APIError(404, 'Not Found', `Station with code '${code.toUpperCase()}' not found`);
+  }
+  return station;
+};
+
+/**
+ * Resolve a station code to an ObjectId filter object.
+ */
+export const resolveStationFilter = async (code) => {
+  const station = await getStationByCode(code);
+  return { station: station._id };
 };

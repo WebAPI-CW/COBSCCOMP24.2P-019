@@ -24,6 +24,13 @@ const userSchema = new mongoose.Schema({
     enum: ['HQ_ADMIN', 'PROVINCIAL', 'STATION', 'DEVICE'],
     default: 'STATION'
   },
+  registrationNumber: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    sparse: true,
+    unique: true
+  },
   province: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Province'

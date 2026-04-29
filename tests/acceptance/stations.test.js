@@ -17,7 +17,7 @@ async function seedProvinceAndDistrict(token) {
   const dRes = await request(app)
     .post('/api/v1/districts')
     .set('Authorization', `Bearer ${token}`)
-    .send({ name: 'Colombo', code: 'CMB', province: pRes.body._id });
+    .send({ name: 'Colombo', code: 'CMB', province: pRes.body.code });
   return { province: pRes.body, district: dRes.body };
 }
 
@@ -43,7 +43,7 @@ describe('POST /api/v1/police-stations', () => {
     const res = await request(app)
       .post('/api/v1/police-stations')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Colombo Fort', code: 'CF', district: district._id, province: province._id });
+      .send({ name: 'Colombo Fort', code: 'CF', district: district.code, province: province.code });
     expect(res.status).toBe(201);
     expect(res.headers.location).toContain('/api/v1/police-stations/');
   });
@@ -63,38 +63,35 @@ describe('POST /api/v1/police-stations', () => {
     const res = await request(app)
       .post('/api/v1/police-stations')
       .set('Authorization', `Bearer ${stationToken}`)
-      .send({ name: 'T', code: 'T', district: '000000000000000000000000', province: '000000000000000000000000' });
+      .send({ name: 'T', code: 'T', district: 'XX', province: 'XX' });
     expect(res.status).toBe(403);
   });
 });
 
-describe('GET /api/v1/police-stations/:id', () => {
-  it('should return a single station by id', async () => {
+describe('GET /api/v1/police-stations/:code', () => {
+  it('should return a single station by code', async () => {
     const token = await getAdminToken();
     const { province, district } = await seedProvinceAndDistrict(token);
-    const created = await request(app).post('/api/v1/police-stations').set('Authorization', `Bearer ${token}`).send({ name: 'Single Station', code: 'SS1', district: district._id, province: province._id });
-    const res = await request(app).get(`/api/v1/police-stations/${created.body._id}`).set('Authorization', `Bearer ${token}`);
+    await request(app).post('/api/v1/police-stations').set('Authorization', `Bearer ${token}`).send({ name: 'Single Station', code: 'SS1', district: district.code, province: province.code });
+    const res = await request(app).get('/api/v1/police-stations/SS1').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Single Station');
   });
 
-  it('should return 400 for invalid ObjectId', async () => {
+  it('should return 404 for unknown station code', async () => {
     const token = await getAdminToken();
-    const res = await request(app).get('/api/v1/police-stations/not-valid').set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(400);
+    const res = await request(app).get('/api/v1/police-stations/UNKNOWN').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
   });
 });
 
-describe('PATCH /api/v1/police-stations/:id', () => {
+describe('PATCH /api/v1/police-stations/:code', () => {
   it('should allow partial update', async () => {
     const token = await getAdminToken();
     const { province, district } = await seedProvinceAndDistrict(token);
-    const createRes = await request(app)
-      .post('/api/v1/police-stations')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Fort', code: 'FT', district: district._id, province: province._id });
+    await request(app).post('/api/v1/police-stations').set('Authorization', `Bearer ${token}`).send({ name: 'Fort', code: 'FT', district: district.code, province: province.code });
     const updateRes = await request(app)
-      .patch(`/api/v1/police-stations/${createRes.body._id}`)
+      .patch('/api/v1/police-stations/FT')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Fort Updated' });
     expect(updateRes.status).toBe(200);
@@ -103,17 +100,12 @@ describe('PATCH /api/v1/police-stations/:id', () => {
   });
 });
 
-describe('DELETE /api/v1/police-stations/:id', () => {
+describe('DELETE /api/v1/police-stations/:code', () => {
   it('should return 204 on successful delete', async () => {
     const token = await getAdminToken();
     const { province, district } = await seedProvinceAndDistrict(token);
-    const createRes = await request(app)
-      .post('/api/v1/police-stations')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Fort', code: 'FT', district: district._id, province: province._id });
-    const deleteRes = await request(app)
-      .delete(`/api/v1/police-stations/${createRes.body._id}`)
-      .set('Authorization', `Bearer ${token}`);
+    await request(app).post('/api/v1/police-stations').set('Authorization', `Bearer ${token}`).send({ name: 'Fort', code: 'FT', district: district.code, province: province.code });
+    const deleteRes = await request(app).delete('/api/v1/police-stations/FT').set('Authorization', `Bearer ${token}`);
     expect(deleteRes.status).toBe(204);
   });
 });

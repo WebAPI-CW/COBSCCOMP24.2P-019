@@ -185,6 +185,20 @@ export const getSpeedAnomalies = async (tukTukFilter, query) => {
   return { speedThreshold: parseFloat(speedThreshold), ...paginatedData, data: enrichedData };
 };
 
+export const getTukTukAnomalies = async (tukTukId, query) => {
+  const { speedThreshold = 70, from, to } = query;
+  const tukTuk = await TukTuk.findById(tukTukId).select('_id registrationNumber driverName');
+  if (!tukTuk) throw new APIError(404, 'Not Found', 'TukTuk not found');
+  const pingFilter = { tukTuk: tukTukId, speed: { $gte: parseFloat(speedThreshold) } };
+  if (from || to) {
+    pingFilter.timestamp = {};
+    if (from) pingFilter.timestamp.$gte = parseSLT(from);
+    if (to)   pingFilter.timestamp.$lte = parseSLT(to);
+  }
+  const paginatedData = await getPaginationData(LocationPing, query, pingFilter, null, 50, { speed: -1 });
+  return { speedThreshold: parseFloat(speedThreshold), tukTuk, ...paginatedData };
+};
+
 export const getLocationSummary = async (scopeFilter = {}) => {
   const matchStage = { isActive: true, ...scopeFilter };
   const summary = await TukTuk.aggregate([

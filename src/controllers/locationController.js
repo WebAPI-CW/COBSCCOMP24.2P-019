@@ -137,6 +137,20 @@ export const getSpeedAnomalies = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const getTukTukAnomalies = async (req, res, next) => {
+  try {
+    const threshold = parseFloat(req.query.speedThreshold ?? 70);
+    if (isNaN(threshold) || threshold <= 0) {
+      return next(new APIError(400, 'Bad Request', 'speedThreshold must be a positive number'));
+    }
+    req.query.speedThreshold = threshold;
+    const tukTuk = await TukTukService.getTukTukByRegNumber(req.params.registrationNumber);
+    assertScope(req.user, tukTuk, 'tuktuk');
+    const result = await LocationService.getTukTukAnomalies(tukTuk._id, req.query);
+    res.json(result);
+  } catch (error) { next(error); }
+};
+
 export const getLocationSummary = async (req, res, next) => {
   try {
     const scopeFilter = {};

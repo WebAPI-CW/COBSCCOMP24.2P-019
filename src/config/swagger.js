@@ -160,11 +160,12 @@ const options = {
     tags: [
       { name: 'Auth',      description: 'Authentication — login, register (HQ_ADMIN only), and current user profile' },
       { name: 'Users',     description: 'User account management — list, view, update, deactivate (HQ_ADMIN only)' },
+      { name: 'TukTuks',   description: 'TukTuk registration and fleet management — POST/PUT (HQ_ADMIN, PROVINCIAL), DELETE/activate/deactivate (HQ_ADMIN only)' },
+      { name: 'Location',  description: 'Real-time tracking, live map view, location history and investigative logging — ping (DEVICE only), history/live/inactive/summary (HQ_ADMIN, PROVINCIAL, STATION)' },
+      { name: 'Anomalies', description: 'Anomaly detection — overspeed alerts, signal loss, and abnormal tuktuk behaviour (HQ_ADMIN, PROVINCIAL, STATION)' },
       { name: 'Provinces', description: 'Province administration — read (all roles), write (HQ_ADMIN only)' },
       { name: 'Districts', description: 'District administration — read (all roles), write (HQ_ADMIN only)' },
-      { name: 'Police Stations',  description: 'Police station administration — read (all roles), write (HQ_ADMIN only)' },
-      { name: 'TukTuks',   description: 'TukTuk registration and fleet management — POST/PUT (HQ_ADMIN, PROVINCIAL), DELETE/activate/deactivate (HQ_ADMIN only)' },
-      { name: 'Location',  description: 'Real-time tracking, investigative logging and anomaly detection — ping (DEVICE only), history/anomalies (HQ_ADMIN, PROVINCIAL, STATION)' }
+      { name: 'Police Stations',  description: 'Police station administration — read (all roles), write (HQ_ADMIN only)' }
     ],
     security: [{ bearerAuth: [] }]
   },

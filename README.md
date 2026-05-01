@@ -13,7 +13,8 @@
 A RESTful API for real-time three-wheeler (tuk-tuk) tracking and 
 movement logging for Sri Lanka Law Enforcement. The system collects 
 GPS location pings from registered vehicles and provides live 
-tracking, historical movement logs, and province/district/station 
+tracking, historical movement logs, anomaly detection (overspeed, 
+signal loss, and abnormal behaviour), and province/district/station 
 filtering for operational use by police stations.
 
 ---
@@ -117,16 +118,17 @@ Full documentation available at `/api-docs` (Swagger UI).
 | Tag | Endpoints |
 |---|---|
 | Auth | POST /api/v1/auth/login, GET /api/v1/auth/me |
+| Users | GET, POST /api/v1/users — GET, PATCH /api/v1/users/:email |
+| TukTuks | GET, POST /api/v1/tuktuks — GET, PATCH, DELETE /api/v1/tuktuks/:registrationNumber |
+| Location | POST /api/v1/tuktuks/:registrationNumber/ping |
+| Location | GET /api/v1/locations/live, GET /api/v1/tuktuks/:registrationNumber/location |
+| Location | GET /api/v1/locations/history, GET /api/v1/tuktuks/:registrationNumber/history |
+| Location | GET /api/v1/locations/summary, GET /api/v1/tuktuks/:registrationNumber/summary |
+| Anomalies | GET /api/v1/locations/anomalies, GET /api/v1/tuktuks/:registrationNumber/anomalies |
+| Anomalies | GET /api/v1/locations/inactive |
 | Provinces | GET, POST /api/v1/provinces — GET, PATCH, DELETE /api/v1/provinces/:code |
 | Districts | GET, POST /api/v1/districts — GET, PATCH, DELETE /api/v1/districts/:code |
-| Users | GET, POST /api/v1/users — GET, PATCH /api/v1/users/:email |
 | Police Stations | GET, POST /api/v1/police-stations — GET, PATCH, DELETE /api/v1/police-stations/:code |
-| TukTuks | GET, POST /api/v1/tuktuks — GET, PATCH, DELETE /api/v1/tuktuks/:registrationNumber |
-| Location | POST /api/v1/tuktuks/:registrationNumber/ping, GET /api/v1/tuktuks/:registrationNumber/location |
-| Location | GET /api/v1/tuktuks/:registrationNumber/history, GET /api/v1/tuktuks/:registrationNumber/summary |
-| Location | GET /api/v1/locations/live, GET /api/v1/locations/inactive |
-| Location | GET /api/v1/locations/history, GET /api/v1/locations/anomalies |
-| Location | GET /api/v1/locations/summary |
 
 ---
 
@@ -173,8 +175,6 @@ Full documentation available at `/api-docs` (Swagger UI).
   replicas. High concurrent load would bottleneck queries.
 - **Rate limiting** — Applied per IP. No per device throttle 
   on the ping endpoint.
-- **Field Projection** — No `?fields=` query parameter support.
-  All responses return the full resource representation.
 
 ---
 

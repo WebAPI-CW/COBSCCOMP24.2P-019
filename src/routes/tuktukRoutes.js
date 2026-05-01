@@ -171,8 +171,8 @@ const router = express.Router();
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.route('/')
-  .head(protect, getTukTuks)
-  .get(protect, getTukTuks)
+  .head(protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getTukTuks)
+  .get(protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getTukTuks)
   .post(protect, authorize('HQ_ADMIN', 'PROVINCIAL'), validateTukTuk, createTukTuk);
 
 /**
@@ -311,7 +311,7 @@ router.post('/:registrationNumber/ping', protect, authorize('DEVICE'), validateP
 
 router.get('/:registrationNumber/location', protect, getLastLocation);
 
-router.get('/:registrationNumber/history', protect, getLocationHistory);
+router.get('/:registrationNumber/history', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'), getLocationHistory);
 
 /**
  * @swagger

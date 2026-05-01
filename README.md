@@ -37,8 +37,8 @@ filtering for operational use by police stations.
 
 | | URL |
 |---|---|
-| Base URL | https://tukpatrol-api.onrender.com |
-| Swagger Docs | https://tukpatrol-api.onrender.com/api-docs |
+| Base URL | https://cobsccomp24-2p-019.onrender.com |
+| Swagger Docs | https://cobsccomp24-2p-019.onrender.com/api-docs |
 
 ---
 

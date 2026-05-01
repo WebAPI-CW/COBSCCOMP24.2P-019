@@ -23,7 +23,15 @@ const app = express();
 app.set('json replacer', sltReplacer);
 
 // Security and middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'connect-src': ["'self'"],
+      'img-src':     ["'self'", 'data:', 'https://validator.swagger.io'],
+    }
+  }
+}));
 
 // CORS Configuration
 const corsOptions = {

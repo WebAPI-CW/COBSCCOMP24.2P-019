@@ -43,7 +43,7 @@ describe('POST /api/v1/police-stations', () => {
     const res = await request(app)
       .post('/api/v1/police-stations')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Colombo Fort', code: 'CF', district: district.code, province: province.code });
+      .send({ name: 'Colombo Fort', code: 'ST001', district: district.code, province: province.code });
     expect(res.status).toBe(201);
     expect(res.headers.location).toContain('/api/v1/police-stations/');
   });

@@ -114,8 +114,8 @@ const router = express.Router();
  *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
- *                 example: CF
- *                 description: Station code (e.g. CF)
+ *                 example: ST001
+ *                 description: Station code (e.g. ST001)
  *               registrationNumber:
  *                 type: string
  *                 example: WP-0001
@@ -213,8 +213,8 @@ router.route('/')
  *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
- *                 example: CF
- *                 description: Station code (e.g. CF)
+ *                 example: ST001
+ *                 description: Station code (e.g. ST001)
  *               registrationNumber:
  *                 type: string
  *                 example: WP-0001

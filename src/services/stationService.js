@@ -79,7 +79,7 @@ export const deleteStation = async (id) => {
 };
 
 /**
- * Return a single station by its code (e.g. 'CF', 'KOT').
+ * Return a single station by its code (e.g. 'ST001', 'ST002').
  * Throws APIError 404 if not found.
  */
 export const getStationByCode = async (code) => {

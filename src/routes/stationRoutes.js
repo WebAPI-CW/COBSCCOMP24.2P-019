@@ -99,7 +99,7 @@ const router = express.Router();
  *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
- *                 example: CF
+ *                 example: ST001
  *               district:
  *                 type: string
  *                 example: COL
@@ -149,8 +149,8 @@ router.route('/')
  *         required: true
  *         schema:
  *           type: string
- *           example: CF
- *         description: Station code (e.g. CF, KOT)
+ *           example: ST001
+ *         description: Station code (e.g. ST001, ST002)
  *     responses:
  *       200:
  *         description: Station details
@@ -179,8 +179,8 @@ router.route('/')
  *         required: true
  *         schema:
  *           type: string
- *           example: CF
- *         description: Station code (e.g. CF, KOT)
+ *           example: ST001
+ *         description: Station code (e.g. ST001, ST002)
  *     requestBody:
  *       required: true
  *       content:
@@ -193,7 +193,7 @@ router.route('/')
  *                 example: Colombo Fort Police Station
  *               code:
  *                 type: string
- *                 example: CF
+ *                 example: ST001
  *               district:
  *                 type: string
  *                 example: COL
@@ -236,8 +236,8 @@ router.route('/')
  *         required: true
  *         schema:
  *           type: string
- *           example: CF
- *         description: Station code (e.g. CF, KOT)
+ *           example: ST001
+ *         description: Station code (e.g. ST001, ST002)
  *     responses:
  *       204:
  *         description: Station deleted — no content returned

@@ -20,14 +20,14 @@ describe('StationService — createStation', () => {
     const { province, district } = await seedRefs();
     const station = await createStation({
       name: 'Colombo Fort',
-      code: 'CF',
+      code: 'ST001',
       district: district._id,
       province: province._id
     });
 
     expect(station._id).toBeDefined();
     expect(station.name).toBe('Colombo Fort');
-    expect(station.code).toBe('CF');
+    expect(station.code).toBe('ST001');
   });
 });
 

@@ -11,7 +11,7 @@ const options = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production'
-          ? 'https://tukpatrol-api.onrender.com'
+          ? 'https://cobsccomp24-2p-019.onrender.com'
           : 'http://localhost:3000',
         description: process.env.NODE_ENV === 'production'
           ? 'Production Server'

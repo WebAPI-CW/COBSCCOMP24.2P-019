@@ -13,7 +13,7 @@ import PoliceStation from '../../src/models/PoliceStation.js';
 async function createRefs() {
   const province = await Province.create({ name: 'Western Province', code: 'WP' });
   const district = await District.create({ name: 'Colombo', code: 'CMB', province: province._id });
-  const station  = await PoliceStation.create({ name: 'Colombo Fort', code: 'CF', district: district._id, province: province._id });
+  const station  = await PoliceStation.create({ name: 'Colombo Fort', code: 'ST001', district: district._id, province: province._id });
   return { province, district, station };
 }
 

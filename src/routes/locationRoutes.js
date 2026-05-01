@@ -105,8 +105,8 @@ const router = express.Router();
  *         name: station
  *         schema:
  *           type: string
- *           example: CF
- *         description: Filter by station code (e.g. CF)
+ *           example: ST001
+ *         description: Filter by station code (e.g. ST001)
  *       - in: query
  *         name: page
  *         schema:
@@ -292,8 +292,8 @@ router.get('/inactive', protect, authorize('HQ_ADMIN', 'PROVINCIAL', 'STATION'),
  *         name: station
  *         schema:
  *           type: string
- *           example: CF
- *         description: Filter by station code (e.g. CF)
+ *           example: ST001
+ *         description: Filter by station code (e.g. ST001)
  *       - in: query
  *         name: page
  *         schema:

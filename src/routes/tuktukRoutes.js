@@ -50,8 +50,8 @@ const router = express.Router();
  *         name: station
  *         schema:
  *           type: string
- *           example: CF
- *         description: Filter by station code (e.g. CF)
+ *           example: ST001
+ *         description: Filter by station code (e.g. ST001)
  *       - in: query
  *         name: isActive
  *         schema:
@@ -150,8 +150,8 @@ const router = express.Router();
  *                 description: District code (e.g. COL)
  *               station:
  *                 type: string
- *                 example: CF
- *                 description: Station code (e.g. CF)
+ *                 example: ST001
+ *                 description: Station code (e.g. ST001)
  *     responses:
  *       201:
  *         description: TukTuk created successfully
@@ -249,7 +249,7 @@ router.route('/')
  *                 description: District code
  *               station:
  *                 type: string
- *                 example: CF
+ *                 example: ST001
  *                 description: Station code
  *               isActive:
  *                 type: boolean

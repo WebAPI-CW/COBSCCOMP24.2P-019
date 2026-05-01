@@ -52,8 +52,8 @@ const options = {
           type: 'object',
           properties: {
             _id:           { type: 'string' },
-            name:          { type: 'string', example: 'Colombo Fort Police Station' },
-            code:          { type: 'string', example: 'CF' },
+            name:          { type: 'string', example: 'ST001 Police Station' },
+            code:          { type: 'string', example: 'ST001' },
             district:      { $ref: '#/components/schemas/District' },
             province:      { $ref: '#/components/schemas/Province' },
             address:       { type: 'string' },

@@ -47,10 +47,11 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Rate limiting — 100 requests per 15 minutes per IP
+// Rate limiting — 500 requests per 15 minutes per IP (raised for testing)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
+  skip: (req) => req.ip === '127.0.0.1' || req.ip === '::1',
   standardHeaders: true,
   legacyHeaders: false,
   message: {

@@ -144,9 +144,8 @@ const sltToUTC = (dateStr, h, m = 0) =>
 
 /**
  * Each entry = one simulator session [startUTC, endUTC].
- * Apr 16–24: 4–5 short sessions per day (~3 min each).
- * Apr 25–27: more and longer sessions (5 min each) — heavier testing phase.
- * Total pings: 200 tuktuks × ~430 timestamps = ~86,000 pings (~30 MB)
+ * Apr 16–30: 4–6 short sessions per day (~3 min each).
+ * Total pings: 200 tuktuks × ~468 timestamps = ~93,600 pings (~33 MB)
  */
 const WORKING_WINDOWS = [
   // ── Apr 16 Wed — first day, 4 evening sessions ──
@@ -246,6 +245,22 @@ const WORKING_WINDOWS = [
   [sltToUTC('2026-04-28', 14, 30), sltToUTC('2026-04-28', 14, 35)],
   [sltToUTC('2026-04-28', 17,  0), sltToUTC('2026-04-28', 17,  5)],
   [sltToUTC('2026-04-28', 20,  0), sltToUTC('2026-04-28', 20,  5)],
+
+  // ── Apr 29 Tue — 6 sessions ──
+  [sltToUTC('2026-04-29',  6, 30), sltToUTC('2026-04-29',  6, 31)],
+  [sltToUTC('2026-04-29',  8, 45), sltToUTC('2026-04-29',  8, 46)],
+  [sltToUTC('2026-04-29', 12, 15), sltToUTC('2026-04-29', 12, 18)],
+  [sltToUTC('2026-04-29', 15,  0), sltToUTC('2026-04-29', 15,  3)],
+  [sltToUTC('2026-04-29', 18, 30), sltToUTC('2026-04-29', 18, 32)],
+  [sltToUTC('2026-04-29', 21, 45), sltToUTC('2026-04-29', 21, 46)],
+
+  // ── Apr 30 Wed — 6 sessions ──
+  [sltToUTC('2026-04-30',  7,  0), sltToUTC('2026-04-30',  7,  2)],
+  [sltToUTC('2026-04-30',  9, 30), sltToUTC('2026-04-30',  9, 31)],
+  [sltToUTC('2026-04-30', 13,  0), sltToUTC('2026-04-30', 13,  2)],
+  [sltToUTC('2026-04-30', 15, 30), sltToUTC('2026-04-30', 15, 31)],
+  [sltToUTC('2026-04-30', 17, 45), sltToUTC('2026-04-30', 17, 48)],
+  [sltToUTC('2026-04-30', 20, 30), sltToUTC('2026-04-30', 20, 33)],
 ];
 
 // ── Main Seed Function ────────────────────────────────────────────────────────

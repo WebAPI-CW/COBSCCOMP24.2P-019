@@ -51,25 +51,52 @@ export const getLiveLocations = async (tukTukFilter, query) => {
   const limit  = parseInt(query.limit, 10) || 20;
   const offset = (page - 1) * limit;
   const total  = await TukTuk.countDocuments(tukTukFilter);
-  const tukTuks = await TukTuk.find(tukTukFilter)
-    .skip(offset).limit(limit)
-    .populate('province', 'name code').populate('district', 'name code').populate('station', 'name code');
-  const tukTukIds = tukTuks.map(v => v._id);
-  const latestPings = await LocationPing.aggregate([
-    { $match:  { tukTuk: { $in: tukTukIds } } },
-    { $sort:   { timestamp: -1 } },
-    { $group:  { _id: '$tukTuk', lastPing: { $first: '$$ROOT' } } }
-  ]);
-  const data = tukTuks.map(tukTuk => {
-    const pingDoc  = latestPings.find(p => p._id.toString() === tukTuk._id.toString());
-    const lastPing = pingDoc ? pingDoc.lastPing : null;
-    return {
-      tukTuk: { _id: tukTuk._id, registrationNumber: tukTuk.registrationNumber, driverName: tukTuk.driverName,
-        province: tukTuk.province, district: tukTuk.district, station: tukTuk.station },
-      lastLocation: lastPing ? { latitude: lastPing.latitude, longitude: lastPing.longitude,
-        speed: lastPing.speed, heading: lastPing.heading, timestamp: lastPing.timestamp } : null
-    };
-  });
+  
+  const pipeline = [
+    { $match: tukTukFilter },
+    { $lookup: {
+        from: 'locationpings',
+        let: { tukTukId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$tukTuk', '$$tukTukId'] } } },
+          { $sort: { timestamp: -1 } },
+          { $limit: 1 }
+        ],
+        as: 'latestPingInfo'
+      }
+    },
+    { $unwind: { path: '$latestPingInfo', preserveNullAndEmptyArrays: true } },
+    { $sort: { 'latestPingInfo.timestamp': -1, _id: 1 } },
+    { $skip: offset },
+    { $limit: limit },
+    { $lookup: { from: 'provinces', localField: 'province', foreignField: '_id', as: 'province' } },
+    { $unwind: { path: '$province', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'districts', localField: 'district', foreignField: '_id', as: 'district' } },
+    { $unwind: { path: '$district', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'policestations', localField: 'station', foreignField: '_id', as: 'station' } },
+    { $unwind: { path: '$station', preserveNullAndEmptyArrays: true } }
+  ];
+
+  const results = await TukTuk.aggregate(pipeline);
+
+  const data = results.map(tukTuk => ({
+    tukTuk: {
+      _id: tukTuk._id,
+      registrationNumber: tukTuk.registrationNumber,
+      driverName: tukTuk.driverName,
+      province: tukTuk.province ? { _id: tukTuk.province._id, name: tukTuk.province.name, code: tukTuk.province.code } : null,
+      district: tukTuk.district ? { _id: tukTuk.district._id, name: tukTuk.district.name, code: tukTuk.district.code } : null,
+      station: tukTuk.station ? { _id: tukTuk.station._id, name: tukTuk.station.name, code: tukTuk.station.code } : null
+    },
+    lastLocation: tukTuk.latestPingInfo ? {
+      latitude: tukTuk.latestPingInfo.latitude,
+      longitude: tukTuk.latestPingInfo.longitude,
+      speed: tukTuk.latestPingInfo.speed,
+      heading: tukTuk.latestPingInfo.heading,
+      timestamp: tukTuk.latestPingInfo.timestamp
+    } : null
+  }));
+
   const filterQs = Object.entries(query)
     .filter(([k]) => k !== 'page' && k !== 'limit').map(([k, v]) => `${k}=${v}`).join('&');
   const qsSuffix = filterQs ? `&${filterQs}` : '';

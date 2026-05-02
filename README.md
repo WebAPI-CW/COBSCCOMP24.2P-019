@@ -35,10 +35,11 @@ filtering for operational use by police stations.
 
 ## Live API
 
-| | URL |
-|---|---|
-| Base URL | https://cobsccomp24-2p-019.onrender.com |
-| Swagger Docs | https://cobsccomp24-2p-019.onrender.com/api-docs |
+| Component | URL / Details |
+| :--- | :--- |
+| **Base URL** | `https://tukpatrol-api-cobsccomp24-2p-019.onrender.com` |
+| **Swagger Docs** | `https://tukpatrol-api-cobsccomp24-2p-019.onrender.com/api-docs` |
+| **Hosting** | Render (Web Service) |
 
 ---
 

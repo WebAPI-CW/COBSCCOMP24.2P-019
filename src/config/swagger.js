@@ -10,12 +10,16 @@ const options = {
     },
     servers: [
       {
-        url: process.env.NODE_ENV === 'production'
-          ? 'https://cobsccomp24-2p-019.onrender.com'
-          : 'http://localhost:3000',
-        description: process.env.NODE_ENV === 'production'
-          ? 'Production Server'
-          : 'Development Server'
+        url: process.env.API_URL || '/',
+        description: 'Current API Server (Auto-detected)'
+      },
+      {
+        url: 'https://tukpatrol-api-cobsccomp24-2p-019.onrender.com',
+        description: 'Render Production Server'
+      },
+      {
+        url: 'http://localhost:3000',
+        description: 'Local Development Server'
       }
     ],
     components: {
